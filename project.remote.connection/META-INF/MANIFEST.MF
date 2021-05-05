@@ -1,0 +1,8 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Connection
+Bundle-SymbolicName: project.remote.connection
+Bundle-Version: 1.0.0.qualifier
+Automatic-Module-Name: project.remote.connection
+Bundle-RequiredExecutionEnvironment: JavaSE-11
+Require-Bundle: com.google.gson;bundle-version="2.8.2"
