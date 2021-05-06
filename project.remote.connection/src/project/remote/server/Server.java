@@ -6,7 +6,8 @@ import java.net.Socket;
 
 /*
  * TODO: 
- * 
+ * 1. Sending length for socket programming
+ * 2. Message protocol header you defined. 
  * 90. Mechanism: Unexpected disconnection from Client (time out and ??)
  * 91. Mechanism: to close all the connections and exit.
  * 		(Server is always waiting for further connection ServerSocket.accept() method)

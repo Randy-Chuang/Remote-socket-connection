@@ -7,6 +7,14 @@ import java.net.InetAddress;
 import java.net.Socket;
 import java.util.Scanner;
 
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+
+import project.remote.common.service.MessageEncode;
+import project.remote.common.service.MessageField;
+import project.remote.common.service.NetMessage;
+
 /*
  * TODO:
  * 
@@ -14,7 +22,6 @@ import java.util.Scanner;
  */
 
 public class Client {
-	
 	
 	public static void main(String[] args) throws IOException {
 		
@@ -36,25 +43,53 @@ public class Client {
 
 			// the following loop performs the exchange of
 			// information between client and client handler
-			while (true) {
-				System.out.println(dis.readUTF());
-				String tosend = scn.nextLine();
-				dos.writeUTF(tosend);
-
-				// If client sends exit,close this connection
-				// and then break from the while loop
-				if (tosend.equals("Exit")) {
-					System.out.println("Closing this connection : " + s);
-					s.close();
-					System.out.println("Connection closed");
-					break;
-				}
-
-				// printing date or time as requested by client
-				String received = dis.readUTF();
-				System.out.println(received);
-			}
-
+//			while (true) {
+//				System.out.println(dis.readUTF());
+//				String tosend = scn.nextLine();
+//				dos.writeUTF(tosend);
+//
+//				// If client sends exit,close this connection
+//				// and then break from the while loop
+//				if (tosend.equals("Exit")) {
+//					System.out.println("Closing this connection : " + s);
+//					s.close();
+//					System.out.println("Connection closed");
+//					break;
+//				}
+//
+//				// printing date or time as requested by client
+//				String received = dis.readUTF();
+//				System.out.println(received);
+//			}
+//			System.out.println(dis.readUTF());
+			// square method
+			JsonObject jsonRequest = MessageEncode.encodeSquare(null, null);
+			jsonRequest.addProperty(MessageField.PARAMETERS_OBJ_STRING, 1.5);
+			String tosend = NetMessage.netMessageEncode(jsonRequest);
+			dos.writeUTF(tosend);
+			
+			String received = dis.readUTF();
+			System.out.println(received);
+			
+			// getSystemInfo method
+			jsonRequest = MessageEncode.encodeSystemInfo(null, null);
+			tosend = NetMessage.netMessageEncode(jsonRequest);
+			dos.writeUTF(tosend);
+			
+			received = dis.readUTF();
+			System.out.println(received);
+			
+			// getDateInfo method
+			jsonRequest = MessageEncode.encodeDateInfo(null, null);
+			tosend = NetMessage.netMessageEncode(jsonRequest);
+			dos.writeUTF(tosend);
+			
+			received = dis.readUTF();
+			System.out.println(received);	
+			
+			dos.writeUTF("Exit");
+			s.close();
+			
 			// closing resources
 			scn.close();
 			dis.close();

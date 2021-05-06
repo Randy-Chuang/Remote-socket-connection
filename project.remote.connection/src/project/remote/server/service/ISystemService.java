@@ -12,6 +12,6 @@ public interface ISystemService {
 	public static class SystemInfo{
 		public String name, version, architecture, javaVersion, jvmVersion;
 		public int processors;
-		public double load;
+		public double load;	
 	}
 }

@@ -3,57 +3,34 @@ package project.remote.server;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.net.Socket;
+import java.io.PrintWriter;
 
 import com.google.gson.JsonObject;
 
-import project.remote.common.service.NetMessage;
 import project.remote.common.service.MessageDecode;
+import project.remote.common.service.NetMessage;
 import project.remote.server.service.ServerService;
 
-
-/*
- * TODO
- * 90. What if the request message is received piece by piece??
- */
-
-public class ClientHandlerRunnable implements Runnable {
-	private final Socket s;
-	private final DataInputStream dis;
-	private final DataOutputStream dos;
+public class ServerLocal {
 	
-	private final ServerService serverService;
-
-	// Constructor
-	public ClientHandlerRunnable(Socket s) throws IOException {
-		this.s = s;
-		// obtaining input and out streams
-		this.dis = new DataInputStream(s.getInputStream());
-		this.dos = new DataOutputStream(s.getOutputStream());
+	public static void main(String[] args) throws IOException {
 		
-		this.serverService = new ServerService();
-	}
-
-	@Override
-	public void run() {
+		DataInputStream dis  = new DataInputStream(System.in);
+		DataOutputStream dos = new DataOutputStream(System.out);
+		ServerService serverService = new ServerService();
+		
+		
 		String received;
-		String toreturn;
 		
 		while (true) {
+			
 			try {
-
-				// Ask user what he wants
-//				dos.writeUTF("Services: getDate, getSystemInfo, square");
 
 				// receive the answer from client
 				received = dis.readUTF();
 				
-				System.out.println("Received: " + received);
+//				System.out.println("Received: " + received);
 				if (received.equals("Exit")) {
-					System.out.println("Client " + this.s + " sends exit...");
-					System.out.println("Closing this connection.");
-					this.s.close();
-					System.out.println("Connection closed");
 					break;
 				}
 				
@@ -98,15 +75,12 @@ public class ClientHandlerRunnable implements Runnable {
 
 		try {
 			// closing resources
-			this.dis.close();
-			this.dos.close();
+			dis.close();
+			dos.close();
 
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+		
 	}
-	
-	
-	
-	
 }

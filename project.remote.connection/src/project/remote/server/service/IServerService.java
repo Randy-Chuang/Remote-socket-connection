@@ -1,8 +1,9 @@
 package project.remote.server.service;
 
-public interface IServerService {
+import com.google.gson.JsonObject;
 
-	public String getServerDate();
-	public String getServerSystemInfo();
-	public String getServerSquare(double base);
+public interface IServerService {
+	public JsonObject getServerDate(JsonObject jsonRequest);
+	public JsonObject getServerSystemInfo(JsonObject jsonRequest);
+	public JsonObject getServerSquare(JsonObject jsonRequest);
 }

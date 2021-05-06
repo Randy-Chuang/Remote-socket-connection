@@ -5,4 +5,5 @@ Bundle-SymbolicName: project.remote.connection
 Bundle-Version: 1.0.0.qualifier
 Automatic-Module-Name: project.remote.connection
 Bundle-RequiredExecutionEnvironment: JavaSE-11
-Require-Bundle: com.google.gson;bundle-version="2.8.2"
+Require-Bundle: com.google.gson;bundle-version="2.8.2",
+ com.google.guava;bundle-version="27.1.0"
