@@ -17,8 +17,9 @@ public class MessageEncode extends MessageField {
 	 * Copy the requested info (method and parameters) into replied JsonObject.
 	 */
 	private static void copyRequestInfo(JsonObject jsonReply, final JsonObject jsonRefRequest) {
-		if(jsonReply == null || jsonRefRequest == null)
+		if(jsonReply == null || jsonRefRequest == null) {
 			return;
+		}
 		// Making deep copy from mandatory info of request to reply. 
 		// com.google.gson.JsonObject.add() only add the reference into the object.
 		jsonReply.add(METHOD_OBJ_STRING, jsonRefRequest.get(METHOD_OBJ_STRING).deepCopy());
@@ -27,7 +28,7 @@ public class MessageEncode extends MessageField {
 
 	public static JsonObject encodeDateInfo(DateInfo dateInfo, final JsonObject jsonRefRequest) {
 		JsonObject jsonObject = MessageField.jsonMessageHeader.deepCopy();
-		Gson gson = new GsonBuilder().serializeNulls().setPrettyPrinting().create();
+		Gson gson = new GsonBuilder().serializeNulls().create();
 		
 		if(jsonRefRequest != null) {
 			copyRequestInfo(jsonObject, jsonRefRequest);
@@ -48,7 +49,7 @@ public class MessageEncode extends MessageField {
 
 	public static JsonObject encodeSystemInfo(SystemInfo systemInfo, final JsonObject jsonRefRequest) {
 		JsonObject jsonObject = MessageField.jsonMessageHeader.deepCopy();
-		Gson gson = new GsonBuilder().serializeNulls().setPrettyPrinting().create();
+		Gson gson = new GsonBuilder().serializeNulls().create();
 		
 		if(jsonRefRequest != null) {
 			copyRequestInfo(jsonObject, jsonRefRequest);
@@ -77,7 +78,7 @@ public class MessageEncode extends MessageField {
 
 	public static JsonObject encodeSquare(Double squared, final JsonObject jsonRefRequest) {
 		JsonObject jsonObject = MessageField.jsonMessageHeader.deepCopy();
-		Gson gson = new GsonBuilder().serializeNulls().setPrettyPrinting().create();
+		Gson gson = new GsonBuilder().serializeNulls().create();
 		
 		if(jsonRefRequest != null) {
 			copyRequestInfo(jsonObject, jsonRefRequest);
@@ -93,11 +94,11 @@ public class MessageEncode extends MessageField {
 		return jsonObject;
 	}
 	
-	
-	public static void main(String[] args) {
-		
-		JsonObject jsonObject = encodeSystemInfo(null, null);
-		System.out.println(jsonObject);
+	/*
+	 * Return a String for pretty printing. 
+	 */
+	public static String jsonObjectPrettyString(final JsonObject jsonRef) {
+		Gson gson = new GsonBuilder().serializeNulls().setPrettyPrinting().create();
+		return gson.toJson(jsonRef);
 	}
-	
 }

@@ -8,10 +8,16 @@ import project.remote.server.service.ISystemService.SystemInfo;
 public class MessageDecode extends MessageField{
 	
 	public static String getMethod(final JsonObject jsonRequest) {
+		if(jsonRequest == null) {
+			return null;
+		}
 		return jsonRequest.get(MessageField.METHOD_OBJ_STRING).getAsString();
 	}
 	
 	public static double getSquareParameters(final JsonObject jsonRequest) {
+		if(jsonRequest == null) {
+			return Double.NaN;
+		}
 		return jsonRequest.get(MessageField.PARAMETERS_OBJ_STRING).getAsDouble();
 	}
 

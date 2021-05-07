@@ -40,11 +40,7 @@ public class SystemService implements ISystemService{
 
 	@Override
 	public double square(double base) {
-		return base * base;
+		return Math.pow(base, 2);
 	}
-
-
-
-	
 
 }

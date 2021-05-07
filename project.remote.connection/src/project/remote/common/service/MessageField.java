@@ -15,7 +15,7 @@ public class MessageField {
 	static {
 		Gson gson = new Gson();
 		jsonMessageHeader.add("jsonrpc", gson.toJsonTree("2.0"));
-		jsonMessageHeader.add("id", gson.toJsonTree("1"));
+		jsonMessageHeader.add("id", gson.toJsonTree(1));
 	}
 	
 	public final static Map<String, String> systemInfoFieldMap = new TreeMap<String, String>();
