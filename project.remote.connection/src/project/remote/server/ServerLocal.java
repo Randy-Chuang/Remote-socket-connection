@@ -1,114 +1,95 @@
 package project.remote.server;
 
-import java.io.DataOutputStream;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.IOException;
-import java.util.Scanner;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 
 import com.google.gson.JsonObject;
 
+import project.remote.common.service.IOUtility;
 import project.remote.common.service.MessageDecode;
 import project.remote.common.service.NetMessage;
 import project.remote.server.service.ServerService;
 
 public class ServerLocal {
-	private static final String INPUT_DELIMITER_STRING = "\r\n";
-	
-	public static void main(String[] args) throws IOException {
+	/*
+	 * Provides server services and communicates via StdIn / StdOut.
+	 */
+	public static void main(String[] args) {
+		// Encapsulate StdIn / StdOut.
+		BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+		BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(System.out));
 		
-		Scanner scanner = new Scanner(System.in);
-		scanner.useDelimiter(INPUT_DELIMITER_STRING);
-//		DataInputStream dis  = new DataInputStream(System.in);
-		DataOutputStream dos = new DataOutputStream(System.out);
 		ServerService serverService = new ServerService();
 		
-		
-		String received;
-		writeToDataOutputStream(dos, "OK\n");
-		while (true) {
+		try {
+			String received;
+			// Confirming ready.
+			String tosend = "OK\n";
+			IOUtility.write(writer, tosend);
 			
-			try {
-				// receive the answer from client
-				received = readFromDataInputStream(scanner);
+			while(true) {
+				// check for buffer of input
+				if(!reader.ready()) {
+//					System.out.println("Input buffer empty, sleep for 1000ms!");
+					Thread.sleep(1000);
+					continue;
+				}
 				
-				if(received == null || received.isBlank()) {
+				received = reader.readLine();
+				if(received != null && received.isBlank()) {
+					continue;
+				}
+				else if(received == null || received.equals("Exit")) {
 					break;
 				}
-
-				if (received.equals("Exit")) {
-					break;
-				}
 				
-				JsonObject jsonRequest = null;
-				String requestMethod = "";
-				try {
-					jsonRequest = NetMessage.netMessageDecode(received);
-					requestMethod = MessageDecode.getMethod(jsonRequest);
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
+				// Decode for header and get the length of request.
+				int length = NetMessage.decodeHeader(received);
+				// skip a line. 
+				reader.readLine();
+				// fetch requested message with length.
+				received = IOUtility.read(reader, length);
 				
-				
-				// write on output stream based on the
-				// answer from the client
+				JsonObject jsonRequest = MessageDecode.getJsonObject(received);
+				String requestMethod = MessageDecode.getMethod(jsonRequest);
 				JsonObject jsonReply = null;
+				// Invoke the designated method
 				switch (requestMethod) {
-
 				case "getDate":
 					jsonReply = serverService.getServerDate(jsonRequest);
-					writeToDataOutputStream(dos, NetMessage.netMessageEncode(jsonReply));
-//					dos.writeUTF(NetMessage.netMessageEncode(jsonReply));
+					tosend = NetMessage.netMessageEncode(jsonReply);
 					break;
-
 				case "getSystemInfo":
 					jsonReply = serverService.getServerSystemInfo(jsonRequest);
-					writeToDataOutputStream(dos, NetMessage.netMessageEncode(jsonReply));
-//					dos.writeUTF(NetMessage.netMessageEncode(jsonReply));
+					tosend = NetMessage.netMessageEncode(jsonReply);
 					break;
-					
 				case "square":
 					jsonReply = serverService.getServerSquare(jsonRequest);
-					writeToDataOutputStream(dos, NetMessage.netMessageEncode(jsonReply));
-//					dos.writeUTF(NetMessage.netMessageEncode(jsonReply));
+					tosend = NetMessage.netMessageEncode(jsonReply);
 					break;
-
 				default:
-					writeToDataOutputStream(dos, "Invalid Input");
+					tosend = "Invalid Input";
 					break;
 				}
-			} catch (IOException e) {
-				e.printStackTrace();
+				// write message to output.
+				IOUtility.write(writer, tosend);
 			}
-		}
+			
+		} catch (IOException | InterruptedException e) {
+			e.printStackTrace();
+		} catch (Exception e) {
+			e.printStackTrace();
+		} 
 
+		// closing resources
 		try {
-			// closing resources
-			scanner.close();
-			dos.close();
-
+			reader.close();
+			writer.close();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		
-	}
-	
-	
-	public static void writeToDataOutputStream(DataOutputStream dos, String tosend) throws IOException {
-		dos.write(tosend.getBytes());
-		dos.flush();
-	}
-	
-	public static String readFromDataInputStream(Scanner scanner) throws IOException {
-		String inputString = "";
-		int lineCount = 3; 
-		while(scanner.hasNext() && lineCount-- != 0) {
-			inputString += scanner.next() + INPUT_DELIMITER_STRING;
-			
-		}
-		return inputString;
-//		byte[] array = new byte[bufferSize];
-//		int readLength = dis.read(array);
-//		if(readLength != -1) {
-//			return new String(array);
-//		}
-	}
+	}	
 }

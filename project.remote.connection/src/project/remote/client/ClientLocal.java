@@ -1,75 +1,76 @@
 package project.remote.client;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 
 import com.google.gson.JsonObject;
 
+import project.remote.common.service.IOUtility;
 import project.remote.common.service.MessageEncode;
 import project.remote.common.service.MessageField;
 import project.remote.common.service.NetMessage;
 
 public class ClientLocal {
-	
-
 	/*
 	 * Communicate with server process via StdIn / StdOut.
 	 */
-	public static void main(String[] args) throws IOException {
+	public static void main(String[] args) throws Exception {
 		// Open a process by executing an executable
-//		Process serverProcess = Runtime.getRuntime().exec("java -jar /home/randy/Desktop/temp/ServerLocal.jar");
-		Process serverProcess = Runtime.getRuntime().exec("/home/randy/Downloads/TestProgram/server");
+		Process serverProcess = Runtime.getRuntime().exec("java -jar /home/randy/Desktop/temp/ServerLocal.jar");
+//		Process serverProcess = Runtime.getRuntime().exec("/home/randy/Downloads/TestProgram/server");
 		
-		// obtaining input and out streams
-		DataInputStream dis = new DataInputStream(serverProcess.getInputStream());
-		DataOutputStream dos = new DataOutputStream(serverProcess.getOutputStream());
+		// Encapsulate StdIn / StdOut for Process. 
+		BufferedReader reader = new BufferedReader(new InputStreamReader(serverProcess.getInputStream()));
+		BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(serverProcess.getOutputStream()));
 		
-		printFromDataInputStream(dis);
+		
+		// Confirming ready.
+		String received = IOUtility.waitForDesignatedInput(reader, "OK", false);
+		System.out.println(received);
 		
 		// square method
 		JsonObject jsonRequest = MessageEncode.encodeSquare(null, null);
 		jsonRequest.addProperty(MessageField.PARAMETERS_OBJ_STRING, 2.2);
 		String tosend = NetMessage.netMessageEncode(jsonRequest);
-		writeToDataOutputStream(dos, tosend);		
-		printFromDataInputStream(dis);
+		IOUtility.write(writer, tosend);
+		waitForResponse(reader);
 
 		// getSystemInfo method
 		jsonRequest = MessageEncode.encodeSystemInfo(null, null);
 		tosend = NetMessage.netMessageEncode(jsonRequest);
-		writeToDataOutputStream(dos, tosend);		
-		printFromDataInputStream(dis);
+		IOUtility.write(writer, tosend);	
+		waitForResponse(reader);
 
 		// getDateInfo method
 		jsonRequest = MessageEncode.encodeDateInfo(null, null);
 		tosend = NetMessage.netMessageEncode(jsonRequest);
-		writeToDataOutputStream(dos, tosend);		
-		printFromDataInputStream(dis);
+		IOUtility.write(writer, tosend);
+		waitForResponse(reader);
 
-		writeToDataOutputStream(dos, "Exit");		
+		tosend = "Exit";
+		IOUtility.write(writer, tosend);
 
 		// closing resources
-		dis.close();
-		dos.close();
+		reader.close();
+		writer.close();
 	}
 	
-	public static void writeToDataOutputStream(DataOutputStream dos, String tosend) throws IOException {
-		// write byte array to DataOutputStream
-		dos.write(tosend.getBytes(), 0, tosend.length());
-		dos.flush();
-	}
-	
-	private static final int bufferSize = 1024;
-	
-	public static void printFromDataInputStream(DataInputStream dis) throws IOException {
-		byte[] array = new byte[bufferSize];
-		// This method blocks until input data is available, EOF is detected, or an exception is thrown.
-		int readLength = dis.read(array);
-		if(readLength != -1) {
-			String string = new String(array);
-			string = string.trim();
-			System.out.println(string);
-		}
+	/*
+	 * Wait for formatted response defined by protocol.
+	 */
+	public static void waitForResponse(BufferedReader reader) throws Exception {
+		String received = IOUtility.waitForNextLine(reader);
+		
+		// Decode for header and get the length of request.
+		int length = NetMessage.decodeHeader(received);
+		// skip a line. 
+		reader.readLine();
+		// fetch requested message with length.
+		received = IOUtility.read(reader, length);
+		
+		System.out.println(received);
 	}
 	
 }

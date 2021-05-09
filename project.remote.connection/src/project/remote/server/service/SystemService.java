@@ -6,6 +6,9 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+import project.remote.common.service.ServiceClass.DateInfo;
+import project.remote.common.service.ServiceClass.SystemInfo;
+
 public class SystemService implements ISystemService{
 	public static final DateFormat forDay = new SimpleDateFormat("dd");
 	public static final DateFormat forMonth = new SimpleDateFormat("MM");

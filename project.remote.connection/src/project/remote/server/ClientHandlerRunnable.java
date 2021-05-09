@@ -11,12 +11,6 @@ import project.remote.common.service.NetMessage;
 import project.remote.common.service.MessageDecode;
 import project.remote.server.service.ServerService;
 
-
-/*
- * TODO
- * 90. What if the request message is received piece by piece??
- */
-
 public class ClientHandlerRunnable implements Runnable {
 	private final Socket s;
 	private final DataInputStream dis;

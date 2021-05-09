@@ -13,6 +13,14 @@ public class NetMessage {
 	private static final String MESSAGE_DELIMITER = "\r\n";
 	private static final String MESSAGE_HEADER_SUFFIX = MESSAGE_DELIMITER.repeat(2);
 	private static final String UTF_8_STRING = "UTF-8";
+	
+	public static int decodeHeader(String message) throws Exception {
+		if(message == null || !message.startsWith(MESSAGE_HEADER_PREFIX_CHECK)) {
+			throw new Exception("Invalid format: Not a valid requested message header!");
+		}
+		Integer length = Integer.valueOf(message.substring(MESSAGE_HEADER_PREFIX_CHECK.length()).trim());
+		return length.intValue();
+	}
 
 	public static String netMessageEncode(JsonObject jsonObject) throws UnsupportedEncodingException {
 		Gson gson = new GsonBuilder().serializeNulls().create();
@@ -47,10 +55,4 @@ public class NetMessage {
 		return jsonObject;
 	}
 	
-	public static void main(String[] args) {
-		String string = "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"getSystemInfo\",\"params\":null,\"return\":{\"name\":null,\"version\":null,\"architecture\":null,\"load\":null,\"Java version\":null,\"JVM version\":null}}";
-		
-		JsonParser jsonParser = new JsonParser();		
-		JsonObject jsonObject = jsonParser.parse(string).getAsJsonObject();
-	}
 }

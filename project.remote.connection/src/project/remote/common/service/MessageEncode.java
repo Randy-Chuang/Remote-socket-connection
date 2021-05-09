@@ -8,8 +8,8 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
 
-import project.remote.server.service.ISystemService.DateInfo;
-import project.remote.server.service.ISystemService.SystemInfo;
+import project.remote.common.service.ServiceClass.DateInfo;
+import project.remote.common.service.ServiceClass.SystemInfo;
 
 public class MessageEncode extends MessageField {
 	
