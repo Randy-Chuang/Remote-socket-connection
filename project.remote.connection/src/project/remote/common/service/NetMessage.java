@@ -23,16 +23,15 @@ public class NetMessage {
 	}
 
 	public static String netMessageEncode(JsonObject jsonObject) throws UnsupportedEncodingException {
-		Gson gson = new GsonBuilder().serializeNulls().create();
-		String jsonString = gson.toJson(new JsonParser().parse(jsonObject.toString()));
+		Gson gson = new GsonBuilder().serializeNulls().setPrettyPrinting().create();
+		String jsonString = gson.toJson(new JsonParser().parse(jsonObject.toString())) + MESSAGE_DELIMITER;
 		
 		String message = new String(MESSAGE_HEADER_PREFIX);
-		Integer length = jsonString.getBytes(UTF_8_STRING).length;
+		Integer length = jsonString.length();
 		
-		message += length.toString() + MESSAGE_HEADER_SUFFIX + jsonString + MESSAGE_DELIMITER;
+		message += length.toString() + MESSAGE_HEADER_SUFFIX + jsonString;
 		
 		return message;
-		
 	}
 	
 	public static JsonObject netMessageDecode(String message) throws Exception {

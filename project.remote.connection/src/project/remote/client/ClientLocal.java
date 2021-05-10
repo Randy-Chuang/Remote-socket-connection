@@ -18,8 +18,8 @@ public class ClientLocal {
 	 */
 	public static void main(String[] args) throws Exception {
 		// Open a process by executing an executable
-		Process serverProcess = Runtime.getRuntime().exec("java -jar /home/randy/Desktop/temp/ServerLocal.jar");
-//		Process serverProcess = Runtime.getRuntime().exec("/home/randy/Downloads/TestProgram/server");
+//		Process serverProcess = Runtime.getRuntime().exec("java -jar /home/randy/Desktop/temp/ServerLocal.jar");
+		Process serverProcess = Runtime.getRuntime().exec("/home/randy/Downloads/TestProgram/server");
 		
 		// Encapsulate StdIn / StdOut for Process. 
 		BufferedReader reader = new BufferedReader(new InputStreamReader(serverProcess.getInputStream()));

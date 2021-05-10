@@ -1,14 +1,15 @@
 package project.remote.client;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.net.InetAddress;
 import java.net.Socket;
-import java.util.Scanner;
 
 import com.google.gson.JsonObject;
 
+import project.remote.common.service.IOUtility;
 import project.remote.common.service.MessageEncode;
 import project.remote.common.service.MessageField;
 import project.remote.common.service.NetMessage;
@@ -21,79 +22,73 @@ import project.remote.common.service.NetMessage;
 
 public class Client {
 	
-	public static void main(String[] args) throws IOException {
-		
+	public static void main(String[] args) {
 		final String serverIpAddress = "192.168.66.144";
 		final String localhost = "localhost";
 		final int serverPort = 5056;
+		
+		
+		// getting localhost ip
 		try {
-			Scanner scn = new Scanner(System.in);
-
-			// getting localhost ip
 			InetAddress ip = InetAddress.getByName(localhost);
 			
 			// establish the connection with server ip address and port
-			Socket s = new Socket(serverIpAddress, serverPort);
+			Socket socket = new Socket(serverIpAddress, serverPort);
+			
+			// Encapsulate StdIn / StdOut for Process. 
+			BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+			BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
 
-			// obtaining input and out streams
-			DataInputStream dis = new DataInputStream(s.getInputStream());
-			DataOutputStream dos = new DataOutputStream(s.getOutputStream());
+			// Confirming ready.
+			String received = IOUtility.waitForDesignatedInput(reader, "OK", false);
+			System.out.println(received);
 
-			// the following loop performs the exchange of
-			// information between client and client handler
-//			while (true) {
-//				System.out.println(dis.readUTF());
-//				String tosend = scn.nextLine();
-//				dos.writeUTF(tosend);
-//
-//				// If client sends exit,close this connection
-//				// and then break from the while loop
-//				if (tosend.equals("Exit")) {
-//					System.out.println("Closing this connection : " + s);
-//					s.close();
-//					System.out.println("Connection closed");
-//					break;
-//				}
-//
-//				// printing date or time as requested by client
-//				String received = dis.readUTF();
-//				System.out.println(received);
-//			}
-//			System.out.println(dis.readUTF());
 			// square method
 			JsonObject jsonRequest = MessageEncode.encodeSquare(null, null);
-			jsonRequest.addProperty(MessageField.PARAMETERS_OBJ_STRING, 1.5);
+			jsonRequest.addProperty(MessageField.PARAMETERS_OBJ_STRING, 2.2);
 			String tosend = NetMessage.netMessageEncode(jsonRequest);
-			dos.writeUTF(tosend);
-			
-			String received = dis.readUTF();
-			System.out.println(received);
-			
+			IOUtility.write(writer, tosend);
+			waitForResponse(reader);
+
 			// getSystemInfo method
 			jsonRequest = MessageEncode.encodeSystemInfo(null, null);
 			tosend = NetMessage.netMessageEncode(jsonRequest);
-			dos.writeUTF(tosend);
-			
-			received = dis.readUTF();
-			System.out.println(received);
-			
+			IOUtility.write(writer, tosend);
+			waitForResponse(reader);
+
 			// getDateInfo method
 			jsonRequest = MessageEncode.encodeDateInfo(null, null);
 			tosend = NetMessage.netMessageEncode(jsonRequest);
-			dos.writeUTF(tosend);
-			
-			received = dis.readUTF();
-			System.out.println(received);	
-			
-			dos.writeUTF("Exit");
-			s.close();
-			
+			IOUtility.write(writer, tosend);
+			waitForResponse(reader);
+
+			tosend = "Exit";
+			IOUtility.write(writer, tosend);
+
 			// closing resources
-			scn.close();
-			dis.close();
-			dos.close();
+			reader.close();
+			writer.close();
+			socket.close();
 		} catch (Exception e) {
+			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		
+	}
+	
+	/*
+	 * Wait for formatted response defined by protocol.
+	 */
+	public static void waitForResponse(BufferedReader reader) throws Exception {
+		String received = IOUtility.waitForNextLine(reader);
+		
+		// Decode for header and get the length of request.
+		int length = NetMessage.decodeHeader(received);
+		// skip a line. 
+		reader.readLine();
+		// fetch requested message with length.
+		received = IOUtility.read(reader, length);
+		
+		System.out.println(received);
 	}
 }

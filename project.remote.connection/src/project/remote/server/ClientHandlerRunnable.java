@@ -1,106 +1,113 @@
 package project.remote.server;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.net.Socket;
 
 import com.google.gson.JsonObject;
 
-import project.remote.common.service.NetMessage;
+import project.remote.common.service.IOUtility;
 import project.remote.common.service.MessageDecode;
+import project.remote.common.service.NetMessage;
 import project.remote.server.service.ServerService;
 
 public class ClientHandlerRunnable implements Runnable {
-	private final Socket s;
-	private final DataInputStream dis;
-	private final DataOutputStream dos;
+	private final Socket socket;
+//	private final DataInputStream dis;
+//	private final DataOutputStream dos;
+	private final BufferedReader reader;
+	private final BufferedWriter writer;
 	
 	private final ServerService serverService;
 
 	// Constructor
 	public ClientHandlerRunnable(Socket s) throws IOException {
-		this.s = s;
+		this.socket = s;
 		// obtaining input and out streams
-		this.dis = new DataInputStream(s.getInputStream());
-		this.dos = new DataOutputStream(s.getOutputStream());
+//		this.dis = new DataInputStream(s.getInputStream());
+//		this.dos = new DataOutputStream(s.getOutputStream());
+		
+		this.reader = new BufferedReader(new InputStreamReader(s.getInputStream()));
+		this.writer = new BufferedWriter(new OutputStreamWriter(s.getOutputStream()));
 		
 		this.serverService = new ServerService();
 	}
 
 	@Override
 	public void run() {
-		String received;
-		String toreturn;
-		
-		while (true) {
-			try {
-
-				// Ask user what he wants
-//				dos.writeUTF("Services: getDate, getSystemInfo, square");
-
-				// receive the answer from client
-				received = dis.readUTF();
+		try {
+			String received;
+			// Confirming ready.
+			String tosend = "OK";
+			IOUtility.write(writer, tosend);
+			
+			while(true) {
+				// check for buffer of input
+				if(!reader.ready()) {
+//					System.out.println("Input buffer empty, sleep for 1000ms!");
+					Thread.sleep(1000);
+					continue;
+				}
 				
-				System.out.println("Received: " + received);
-				if (received.equals("Exit")) {
-					System.out.println("Client " + this.s + " sends exit...");
-					System.out.println("Closing this connection.");
-					this.s.close();
-					System.out.println("Connection closed");
+				received = reader.readLine();
+				if(received != null && received.isBlank()) {
+					continue;
+				}
+				else if(received == null || received.equals("Exit")) {
+					System.out.println("Client " + this.socket + " sends exit...");
 					break;
 				}
 				
-				JsonObject jsonRequest = null;
-				String requestMethod = "";
-				try {
-					jsonRequest = NetMessage.netMessageDecode(received);
-					requestMethod = MessageDecode.getMethod(jsonRequest);
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-				
-				
-				// write on output stream based on the
-				// answer from the client
+				// Decode for header and get the length of request.
+				int length = NetMessage.decodeHeader(received);
+				// skip a line. 
+				reader.readLine();
+				// fetch requested message with length.
+				received = IOUtility.read(reader, length);
+				System.out.println("got: " + received);
+				JsonObject jsonRequest = MessageDecode.getJsonObject(received);
+				String requestMethod = MessageDecode.getMethod(jsonRequest);
 				JsonObject jsonReply = null;
+				// Invoke the designated method
 				switch (requestMethod) {
-
 				case "getDate":
 					jsonReply = serverService.getServerDate(jsonRequest);
-					dos.writeUTF(NetMessage.netMessageEncode(jsonReply));
+					tosend = NetMessage.netMessageEncode(jsonReply);
 					break;
-
 				case "getSystemInfo":
 					jsonReply = serverService.getServerSystemInfo(jsonRequest);
-					dos.writeUTF(NetMessage.netMessageEncode(jsonReply));
+					tosend = NetMessage.netMessageEncode(jsonReply);
 					break;
-					
 				case "square":
 					jsonReply = serverService.getServerSquare(jsonRequest);
-					dos.writeUTF(NetMessage.netMessageEncode(jsonReply));
+					tosend = NetMessage.netMessageEncode(jsonReply);
 					break;
-
 				default:
-					dos.writeUTF("Invalid input");
+					tosend = "Invalid Input";
 					break;
 				}
-			} catch (IOException e) {
-				e.printStackTrace();
+				// write message to output.
+				IOUtility.write(writer, tosend);
 			}
-		}
+			
+		} catch (IOException | InterruptedException e) {
+			e.printStackTrace();
+		} catch (Exception e) {
+			e.printStackTrace();
+		} 
 
+		// closing resources
 		try {
-			// closing resources
-			this.dis.close();
-			this.dos.close();
-
+			reader.close();
+			writer.close();
+			System.out.println("Closing this connection.");
+			socket.close();
+			System.out.println("Connection closed");
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
-	
-	
-	
-	
 }
