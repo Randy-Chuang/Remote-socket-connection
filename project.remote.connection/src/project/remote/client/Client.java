@@ -16,16 +16,19 @@ import project.remote.common.service.NetMessage;
 
 /*
  * TODO:
- * 
  * 90. Mechanism: Unexpected disconnection from Server (time out and ??)
  */
 
 public class Client {
 	
 	public static void main(String[] args) {
-		final String serverIpAddress = "192.168.66.144";
+		final String serverIpAddress = "127.0.0.1"; // loop-back IP address. 
 		final String localhost = "localhost";
-		final int serverPort = 5056;
+		int serverPort = 5056;
+		if(args.length > 0) {
+			serverPort = Integer.valueOf(args[0]).intValue();
+		}
+		System.out.println("Socket client would connect to localhost on port: " + serverPort);
 		
 		
 		// getting localhost ip

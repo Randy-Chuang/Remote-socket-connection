@@ -27,7 +27,7 @@ public class ServerLocal {
 		try {
 			String received;
 			// Confirming ready.
-			String tosend = "OK\n";
+			String tosend = "OK";
 			IOUtility.write(writer, tosend);
 			
 			while(true) {

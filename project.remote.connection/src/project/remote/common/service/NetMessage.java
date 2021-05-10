@@ -12,7 +12,6 @@ public class NetMessage {
 	private static final String MESSAGE_HEADER_PREFIX = "Content-Length: ";
 	private static final String MESSAGE_DELIMITER = "\r\n";
 	private static final String MESSAGE_HEADER_SUFFIX = MESSAGE_DELIMITER.repeat(2);
-	private static final String UTF_8_STRING = "UTF-8";
 	
 	public static int decodeHeader(String message) throws Exception {
 		if(message == null || !message.startsWith(MESSAGE_HEADER_PREFIX_CHECK)) {

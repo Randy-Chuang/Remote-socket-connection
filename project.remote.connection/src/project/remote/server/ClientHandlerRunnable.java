@@ -16,8 +16,6 @@ import project.remote.server.service.ServerService;
 
 public class ClientHandlerRunnable implements Runnable {
 	private final Socket socket;
-//	private final DataInputStream dis;
-//	private final DataOutputStream dos;
 	private final BufferedReader reader;
 	private final BufferedWriter writer;
 	
@@ -26,10 +24,7 @@ public class ClientHandlerRunnable implements Runnable {
 	// Constructor
 	public ClientHandlerRunnable(Socket s) throws IOException {
 		this.socket = s;
-		// obtaining input and out streams
-//		this.dis = new DataInputStream(s.getInputStream());
-//		this.dos = new DataOutputStream(s.getOutputStream());
-		
+		// obtaining input and out buffer
 		this.reader = new BufferedReader(new InputStreamReader(s.getInputStream()));
 		this.writer = new BufferedWriter(new OutputStreamWriter(s.getOutputStream()));
 		
@@ -48,7 +43,7 @@ public class ClientHandlerRunnable implements Runnable {
 				// check for buffer of input
 				if(!reader.ready()) {
 //					System.out.println("Input buffer empty, sleep for 1000ms!");
-					Thread.sleep(1000);
+					Thread.sleep(1000);					
 					continue;
 				}
 				

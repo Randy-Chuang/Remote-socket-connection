@@ -2,6 +2,7 @@ package project.remote.client;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 
@@ -17,9 +18,28 @@ public class ClientLocal {
 	 * Communicate with server process via StdIn / StdOut.
 	 */
 	public static void main(String[] args) throws Exception {
+//		String serverExecCommand = "/home/randy/Downloads/TestProgram/server";
+//		String serverExecCommand = "java -jar /home/randy/Desktop/temp/ServerLocal.jar";
+		// Check for user input executable file. 
+		String serverExecCommand = "";
+		if(args.length > 0) {
+			File file = new File(args[0]);
+			String path = file.getAbsolutePath();
+			if(path.substring(path.lastIndexOf('.') + 1).trim().equals("jar")) {
+				serverExecCommand = "java -jar " + path;
+			}
+			else if(file.canExecute()) {
+				serverExecCommand = path;
+			}
+			else {
+				throw new Exception("main: Unrecognized file.");
+			}
+		}
+		else {
+			throw new Exception("main: too few arguments for main method.");
+		}
 		// Open a process by executing an executable
-//		Process serverProcess = Runtime.getRuntime().exec("java -jar /home/randy/Desktop/temp/ServerLocal.jar");
-		Process serverProcess = Runtime.getRuntime().exec("/home/randy/Downloads/TestProgram/server");
+		Process serverProcess = Runtime.getRuntime().exec(serverExecCommand);
 		
 		// Encapsulate StdIn / StdOut for Process. 
 		BufferedReader reader = new BufferedReader(new InputStreamReader(serverProcess.getInputStream()));
