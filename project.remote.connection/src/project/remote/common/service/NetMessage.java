@@ -33,6 +33,14 @@ public class NetMessage {
 		return message;
 	}
 	
+	public static String netMessageEncode(String pureMessage) {
+		pureMessage += MESSAGE_DELIMITER;
+		String message = new String(MESSAGE_HEADER_PREFIX);
+		Integer length = pureMessage.length();
+		message += length.toString() + MESSAGE_HEADER_SUFFIX + pureMessage;
+		return message;
+	}
+	
 	public static JsonObject netMessageDecode(String message) throws Exception {
 		if(message == null) {
 			return null;
