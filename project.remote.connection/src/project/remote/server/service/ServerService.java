@@ -22,7 +22,7 @@ public class ServerService implements IServerService{
 		// Invoke designated method
 		DateInfo dateInfo = systemService.getDate();
 		// Encode replied JsonObject
-		JsonObject jsonReply = MessageEncode.encodeDateInfo(dateInfo, jsonRequest);
+		JsonObject jsonReply = MessageEncode.encodeDateInfo(jsonRequest, dateInfo);
 		return jsonReply;
 	}
 
@@ -31,7 +31,7 @@ public class ServerService implements IServerService{
 		// Invoke designated method
 		SystemInfo systemInfo = systemService.getSystemInfo();
 		// Encode replied JsonObject
-		JsonObject jsonReply = MessageEncode.encodeSystemInfo(systemInfo, jsonRequest);
+		JsonObject jsonReply = MessageEncode.encodeSystemInfo(jsonRequest, systemInfo);
 		return jsonReply;
 	}
 
@@ -42,7 +42,7 @@ public class ServerService implements IServerService{
 		// Invoke designated method
 		double squared = systemService.square(base);
 		// Encode replied JsonObject
-		JsonObject jsonReply = MessageEncode.encodeSquare(squared, jsonRequest);
+		JsonObject jsonReply = MessageEncode.encodeSquare(jsonRequest, squared);
 		
 		return jsonReply;
 	}

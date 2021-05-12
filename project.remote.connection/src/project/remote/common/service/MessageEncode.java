@@ -25,8 +25,17 @@ public class MessageEncode extends MessageField {
 		jsonReply.add(METHOD_OBJ_STRING, jsonRefRequest.get(METHOD_OBJ_STRING).deepCopy());
 		jsonReply.add(PARAMETERS_OBJ_STRING, jsonRefRequest.get(PARAMETERS_OBJ_STRING).deepCopy());
 	}
+	
+	/*
+	 * These encoding methods shall be able to encode request and reply. Therefore, we need to 
+	 * input request parameters and replied object. Hence, causing the calling of these method 
+	 * incur 2 scenarios: 
+	 * 1. Encoding request: null replied object with request parameters
+	 * 2. Encoding reply: replied object with referenced requested JsonObject 
+	 * 		(therefore we could leave request parameters as null)
+	 */
 
-	public static JsonObject encodeDateInfo(DateInfo dateInfo, final JsonObject jsonRefRequest) {
+	public static JsonObject encodeDateInfo(final JsonObject jsonRefRequest, DateInfo dateInfo) {
 		JsonObject jsonObject = MessageField.jsonMessageHeader.deepCopy();
 		Gson gson = new GsonBuilder().serializeNulls().create();
 		
@@ -47,7 +56,7 @@ public class MessageEncode extends MessageField {
 		return jsonObject;
 	}
 
-	public static JsonObject encodeSystemInfo(SystemInfo systemInfo, final JsonObject jsonRefRequest) {
+	public static JsonObject encodeSystemInfo(final JsonObject jsonRefRequest, SystemInfo systemInfo) {
 		JsonObject jsonObject = MessageField.jsonMessageHeader.deepCopy();
 		Gson gson = new GsonBuilder().serializeNulls().create();
 		
@@ -76,7 +85,7 @@ public class MessageEncode extends MessageField {
 		return jsonObject;
 	}
 
-	public static JsonObject encodeSquare(Double squared, final JsonObject jsonRefRequest) {
+	public static JsonObject encodeSquare(final JsonObject jsonRefRequest, Double squared) {
 		JsonObject jsonObject = MessageField.jsonMessageHeader.deepCopy();
 		Gson gson = new GsonBuilder().serializeNulls().create();
 		

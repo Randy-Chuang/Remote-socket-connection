@@ -23,20 +23,17 @@ public class Client {
 	
 	public static void main(String[] args) {
 		final String serverIpAddress = "127.0.0.1"; // loop-back IP address. 
-		final String localhost = "localhost";
 		int serverPort = 5056;
 		if(args.length > 0) {
 			serverPort = Integer.valueOf(args[0]).intValue();
 		}
 		System.out.println("Socket client would connect to localhost on port: " + serverPort);
 		
-		
-		// getting localhost ip
 		try {
-			InetAddress ip = InetAddress.getByName(localhost);
+			InetAddress ip = InetAddress.getByName(serverIpAddress);
 			
 			// establish the connection with server ip address and port
-			Socket socket = new Socket(serverIpAddress, serverPort);
+			Socket socket = new Socket(ip, serverPort);
 			
 			// Encapsulate StdIn / StdOut for Process. 
 			BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
