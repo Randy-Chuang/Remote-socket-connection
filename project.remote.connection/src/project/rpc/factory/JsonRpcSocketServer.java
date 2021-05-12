@@ -9,10 +9,11 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import com.google.gson.JsonObject;
 
-import project.remote.common.service.IOUtility;
 import project.remote.common.service.MessageDecode;
 
 public class JsonRpcSocketServer implements IJsonRpcServer {
@@ -20,10 +21,12 @@ public class JsonRpcSocketServer implements IJsonRpcServer {
 	private final Map<String, Invocable> serviceMap;
 	private AbstractProtocolProcessor processor;
 	private Thread serverThread;
+	private final ExecutorService threadPool; 
 	
 	public JsonRpcSocketServer(final int portNumber) throws IOException {
 		this.serverSocket = new ServerSocket(portNumber);
 		this.serviceMap = new TreeMap<String, Invocable>();
+		this.threadPool = Executors.newFixedThreadPool(5);
 	}
 	
 	@Override
@@ -45,8 +48,9 @@ public class JsonRpcSocketServer implements IJsonRpcServer {
 						// create a new Runnable, Thread used for client handling. 
 						try {
 							Runnable runnable = new ClientHandlerRunnable(s, serviceMap, processor);
-							Thread t = new Thread(runnable);
-							t.start();
+							threadPool.execute(runnable);
+//							Thread t = new Thread(runnable);
+//							t.start();
 						} catch (IOException e) {
 							s.close();
 							e.printStackTrace();
@@ -80,6 +84,7 @@ public class JsonRpcSocketServer implements IJsonRpcServer {
 			e.printStackTrace();
 			return;
 		}
+		threadPool.shutdown();
 		System.out.println("Server closed.");
 	}
 

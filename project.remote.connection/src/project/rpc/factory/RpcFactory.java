@@ -1,11 +1,7 @@
 package project.rpc.factory;
 
 import java.io.IOException;
-import java.net.Socket;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
 
 import project.remote.common.service.MessageDecode;
@@ -16,7 +12,13 @@ import project.remote.server.service.ServerService;
 
 /*
  * TODO: 
- * 2. interrupt and stop all client threads before closing server thread (thread pool??)
+ * 1. Closing server and closing all the services (closing all child threads with thread pool??) 
+ * 1.5. The thread of client handler may be blocked with specific methods. e.g. a blocking reading method
+ * 2. Manage your design of factory pattern with a clearer structure, current class hierarchy is showing below:
+ * 		Factory -> JsonRpcServer/Client -> ProtocolProcessor (read, write, encode/decode NetMessage)
+ * 										-> (Client) RequestGenerator (generate JsonRequest with given arguments of objects)
+ * 										-> (Server) RequestHandler (Invoke corresponding service and output a replied JsonObject)
+ * 5. Restructure
  * 80. Confirming that accessing same object with multiple threads won't produce any problem.
  * 90. Time out mechanism. 
  */
@@ -110,7 +112,7 @@ public class RpcFactory {
 		System.out.println("Client starts sending request----------------------");
 		
 		client.invoke("square", 1.123);
-		client.invoke("getDate");		
+		client.invoke("getDate");
 		client.invoke("getSystemInfo");
 		client.stop();
 		
@@ -118,7 +120,7 @@ public class RpcFactory {
 		
 		
 		try {
-			Thread.sleep(50*1000);
+			Thread.sleep(5*1000);
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
