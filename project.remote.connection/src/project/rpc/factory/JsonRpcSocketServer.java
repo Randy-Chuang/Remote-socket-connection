@@ -14,12 +14,11 @@ import com.google.gson.JsonObject;
 
 import project.remote.common.service.IOUtility;
 import project.remote.common.service.MessageDecode;
-import project.remote.common.service.NetMessage;
 
 public class JsonRpcSocketServer implements IJsonRpcServer {
 	private final ServerSocket serverSocket;
 	private final Map<String, Invocable> serviceMap;
-	private ProtocolProcessor processor;
+	private AbstractProtocolProcessor processor;
 	private Thread serverThread;
 	
 	public JsonRpcSocketServer(final int portNumber) throws IOException {
@@ -34,10 +33,11 @@ public class JsonRpcSocketServer implements IJsonRpcServer {
 			// Thread task for socket server.
 			@Override
 			public void run() {
-				while (true) {
+				while (!Thread.currentThread().isInterrupted()) {
 					Socket s = null;
 					try {
 						// socket object to receive incoming client requests
+						// block until a new socket connection is established
 						s = serverSocket.accept();
 						System.out.println("A new client is connected : " + s);
 						System.out.println("Assigning new thread for this client");
@@ -51,7 +51,6 @@ public class JsonRpcSocketServer implements IJsonRpcServer {
 							s.close();
 							e.printStackTrace();
 						}
-						
 					} catch (IOException e) {
 						e.printStackTrace();
 					}
@@ -64,18 +63,24 @@ public class JsonRpcSocketServer implements IJsonRpcServer {
 
 	@Override
 	public void stop() {
+		// Close ServerSocket in order to terminate the blocking state of it. 
+		System.out.println("Closing server.");
+		try {
+			serverSocket.close();
+			System.out.println("ServerSocket closed.");
+		} catch (IOException e) {
+			e.printStackTrace();
+			return;
+		}
+		
 		serverThread.interrupt();
 		try {
 			serverThread.join();
 		} catch (InterruptedException e) {
 			e.printStackTrace();
+			return;
 		}
-		
-		try {
-			serverSocket.close();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+		System.out.println("Server closed.");
 	}
 
 	@Override
@@ -86,11 +91,11 @@ public class JsonRpcSocketServer implements IJsonRpcServer {
 			return;
 		}
 		// Add service
-		serviceMap.put(name, r);			
+		serviceMap.put(name, r);
 	}
 	
 	@Override
-	public void addProtocolProcessor(ProtocolProcessor processor) {
+	public void addProtocolProcessor(AbstractProtocolProcessor processor) {
 		this.processor = processor;
 	}
 	
@@ -99,15 +104,18 @@ public class JsonRpcSocketServer implements IJsonRpcServer {
 		private final Socket socket;
 		private final BufferedReader reader;
 		private final BufferedWriter writer;
+		// Service handling
 		private final Map<String, Invocable> serviceMap;
-		private final ProtocolProcessor protocolProcessor;
+		// Protocol message handling
+		private final AbstractProtocolProcessor protocolProcessor;
 
 		// Constructor
-		public ClientHandlerRunnable(Socket s, Map<String, Invocable> serviceMap, ProtocolProcessor protocolProcessor) throws IOException {
+		public ClientHandlerRunnable(Socket s, Map<String, Invocable> serviceMap, AbstractProtocolProcessor protocolProcessor) throws IOException {
 			this.socket = s;
-			// obtaining input and out buffer
+			// Input and output buffer from Socket.
 			this.reader = new BufferedReader(new InputStreamReader(s.getInputStream()));
 			this.writer = new BufferedWriter(new OutputStreamWriter(s.getOutputStream()));
+			
 			this.serviceMap = serviceMap;
 			this.protocolProcessor = protocolProcessor;
 		}
@@ -115,20 +123,15 @@ public class JsonRpcSocketServer implements IJsonRpcServer {
 		@Override
 		public void run() {
 			try {
-				String received;
 				// Confirming ready.
-				String tosend = "OK";
-//				IOUtility.write(writer, tosend);
+				protocolProcessor.writeOk(writer);;
 				
 				while(true) {
 					// check input with ProtocolProcessor
-					received = protocolProcessor.read(reader);
-					if(received == null) {
+					String received = protocolProcessor.read(reader);
+					if(received == null || received.isBlank()) {
 						System.out.println("Input buffer empty, sleep for 1000ms!");
 						Thread.sleep(1000);					
-						continue;
-					}
-					else if(received.isBlank()) {
 						continue;
 					}
 					else if(protocolProcessor.isExit(received)) {
@@ -136,35 +139,24 @@ public class JsonRpcSocketServer implements IJsonRpcServer {
 						break;
 					}
 					
-					// fetch requested message from ProtocolProcessor
+					// fetch requested message from ProtocolProcessor.
 					received = processor.decode(reader, received);
 					
 					JsonObject jsonRequest = MessageDecode.getJsonObject(received);
 					String requestMethod = MessageDecode.getMethod(jsonRequest);
-					JsonObject jsonReply = null;
+					
+					InvocationContext requestContext = new InvocationContext();
+					requestContext.rawRequest = new String(received);
 					// Invoke the designated method
-					switch (requestMethod) {
-					case "getDate":
-//						jsonReply = serverService.getServerDate(jsonRequest);
-						tosend = NetMessage.netMessageEncode(jsonReply);
-						break;
-					case "getSystemInfo":
-//						jsonReply = serverService.getServerSystemInfo(jsonRequest);
-						tosend = NetMessage.netMessageEncode(jsonReply);
-						break;
-					case "square":
-//						jsonReply = serverService.getServerSquare(jsonRequest);
-						tosend = NetMessage.netMessageEncode(jsonReply);
-						break;
-					default:
-						tosend = "Invalid Input";
-						break;
-					}
+					Invocable designatedMethod = serviceMap.get(requestMethod);
+					designatedMethod.invoke(requestContext);
+					String tosend = protocolProcessor.encode(requestContext.returnVal);
+
 					// write message to output.
-					IOUtility.write(writer, tosend);
+					protocolProcessor.write(writer, tosend);
 				}
 				
-			} catch (IOException | InterruptedException e) {
+			} catch (InterruptedException e) {
 				e.printStackTrace();
 			} catch (Exception e) {
 				e.printStackTrace();
