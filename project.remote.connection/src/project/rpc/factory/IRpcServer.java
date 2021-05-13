@@ -1,6 +1,6 @@
 package project.rpc.factory;
 
-public interface IJsonRpcServer {
+public interface IRpcServer {
     public void start();  // start server
     public void stop();  // stop server
     /*

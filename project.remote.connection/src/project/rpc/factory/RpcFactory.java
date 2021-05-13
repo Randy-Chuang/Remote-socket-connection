@@ -12,12 +12,31 @@ import project.remote.server.service.ServerService;
 
 /*
  * TODO: 
- * 1. Closing server and closing all the services (closing all child threads with thread pool??) 
- * 1.5. The thread of client handler may be blocked with specific methods. e.g. a blocking reading method
- * 2. Manage your design of factory pattern with a clearer structure, current class hierarchy is showing below:
+ * 0. JSON / XML formats and convention / object protocol are just like accessories taken from factory.
+ * Before creating an instance of IRpcServer, wishing to set the properties of Builder first. 
+ * Goal of calling: 
+ * 		IRpcServer server = factory.getSocketServerBuilder().setJsonFormat().setConventionProtocol().create();
+ * 									(getSocketServerBuilder() would set up some default setting)
+ * 		=> 0.1. Complete protocol for convention and object IO stream. 
+ * 		=> 0.2. Built-in server implementation should cooperate with different controls (Interface to control??)
+ * 
+ * 		A. Request / Reply format: JSON - GSON (custom name annotation) / XML - XMLEncoder / Object serialized format. 
+ * 			
+ * 
+ * 		B. Communication protocol: Convention protocol (Content length header) / OOS OIS
+ * 		
+ * 
+ * 		C. User-defined invokable: request object and return object.  		
+ * 
+ * 
+ * 1.5. Responding with invalid request (wrong name of services)
+ * 1.8. Dealing with unexpected disconnection (without receiving exit message)
+ * 3. Manage your design of factory pattern with a clearer structure, current class hierarchy is showing below:
  * 		Factory -> JsonRpcServer/Client -> ProtocolProcessor (read, write, encode/decode NetMessage)
  * 										-> (Client) RequestGenerator (generate JsonRequest with given arguments of objects)
  * 										-> (Server) RequestHandler (Invoke corresponding service and output a replied JsonObject)
+ * 4. User defined Protocol processing (seems to be a tedious job) 
+ * -> how could I add different protocol to Factory and let user to modify it appropriately.  
  * 5. Restructure
  * 80. Confirming that accessing same object with multiple threads won't produce any problem.
  * 90. Time out mechanism. 
@@ -28,23 +47,17 @@ public class RpcFactory {
 		return new RpcFactory();
 	}
 	
-	public IJsonRpcServer getSocketServer(int portNumber) {
+	public IRpcServer getSocketServer(int portNumber) {
 		try {
-			return new JsonRpcSocketServer(portNumber);
+			return new RpcSocketServer(portNumber);
 		} catch (IOException e) {
 			e.printStackTrace();
 			return null;
 		}
 	}
 	
-	public IJsonRpcClient getSocketClient(String hostAddr , int portNumber, AbstractProtocolProcessor processor) {
-		try {
-			return new JsonRpcSocketClient(hostAddr, portNumber, processor);
-		} catch (IOException e) {
-			
-			e.printStackTrace();
-			return null;
-		}
+	public IRpcClient getSocketClient(String hostAddr , int portNumber, AbstractProtocolProcessor processor) {
+		return new RpcSocketClient(hostAddr, portNumber, processor);
 	}
 	
 	
@@ -55,7 +68,7 @@ public class RpcFactory {
 		/// server code
 		ServerService serverService = new ServerService();
 		RpcFactory factory = RpcFactory.getSocketInstance();
-		IJsonRpcServer server = factory.getSocketServer(portNumber);
+		IRpcServer server = factory.getSocketServer(portNumber);
 		server.addRequestHandler("getDate", (ctx) -> {
 			JsonObject jsonRequest = MessageDecode.getJsonObject(ctx.rawRequest);
 			ctx.returnVal = serverService.getServerDate(jsonRequest);
@@ -70,12 +83,12 @@ public class RpcFactory {
 			ctx.returnVal = serverService.getServerSquare(jsonRequest);
 		});
 		
-		MyProtocolProcessor protocolProcessor = new MyProtocolProcessor();
+		DefaultProtocolProcessor protocolProcessor = new DefaultProtocolProcessor();
 		server.addProtocolProcessor(protocolProcessor);
 		server.start();
 		
-		
-		IJsonRpcClient client = factory.getSocketClient(hostAddrss, portNumber, protocolProcessor);
+//		JsonRpcSocketClient client = new JsonRpcSocketClient(hostAddrss, portNumber, AbstractProtocolProcessor.class);
+		IRpcClient client = factory.getSocketClient(hostAddrss, portNumber, protocolProcessor);
 		client.addRequestGenerator("getDate", (params) -> {
 			if(params.length == 0) {
 				return MessageEncode.encodeDateInfo(null, null);
@@ -95,11 +108,16 @@ public class RpcFactory {
 			}
 		});
 		client.addRequestGenerator("square", (params) -> {
-			// input may be an non-double number
-			System.out.println("Square req parameter is instanceof Double: " + (params[0] instanceof Double));
-			if(params.length == 1 && params[0] instanceof Double) {
+			if(params.length == 1) {
+				Double number;
+				try { // input may be an non-double number
+					number = Double.parseDouble(params[0].toString());
+				} catch (NumberFormatException e) {
+					e.printStackTrace();
+					return null;
+				}
 				JsonObject jsonRequest = MessageEncode.encodeSquare(null, null);
-				jsonRequest.addProperty(MessageField.PARAMETERS_OBJ_STRING, (Double)params[0]);
+				jsonRequest.addProperty(MessageField.PARAMETERS_OBJ_STRING, number);
 				return jsonRequest;
 			}
 			else {
@@ -111,14 +129,20 @@ public class RpcFactory {
 		
 		System.out.println("Client starts sending request----------------------");
 		
-		client.invoke("square", 1.123);
-		client.invoke("getDate");
-		client.invoke("getSystemInfo");
+		client.start();
+		
+		String received = (String)client.invoke("square", 1.1);
+		System.out.println(received);
+		received = (String)client.invoke("getDate");
+		System.out.println(received);
+		
+		received = (String)client.invoke("getSystemInfo");
+		System.out.println(received);
+		
 		client.stop();
 		
 		System.out.println("Client closes socket connection ----------------------");
-		
-		
+	
 		try {
 			Thread.sleep(5*1000);
 		} catch (InterruptedException e) {

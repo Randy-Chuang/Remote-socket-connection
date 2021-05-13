@@ -4,7 +4,8 @@ import java.util.function.Function;
 
 import com.google.gson.JsonObject;
 
-public interface IJsonRpcClient {
+public interface IRpcClient {
+	public void start();
 	public void stop();
 	/*
 	 * Be able to receive arbitrary length of arguments and  

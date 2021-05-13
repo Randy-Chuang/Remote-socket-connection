@@ -3,6 +3,16 @@ package project.rpc.factory;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 
+/**
+ * Remove all the method arguments of IO controller. 
+ * The read IO class shall be defined in extending class (Buffered RW or Object IO stream). 
+ * - Required data members / member functions in Factory.Builder class (not yet created): 
+ * 		- Class<? extends AbstractProtocolProcess> set with default value (Conventional protocol)
+ * 		- Class<? implement IFormatProcessor> set with default JSON
+ * 		- create() method call the corresponding constructor 
+ * 		- getServer(Client)Builder called with required arguments ((IP), port) 
+ */
+
 public abstract class AbstractProtocolProcessor{
 	private String okString;
 	private String exitString;
@@ -31,6 +41,9 @@ public abstract class AbstractProtocolProcessor{
 	protected String getOkString() {
 		return okString;
 	}
+	
+	
+	protected abstract boolean ready(BufferedReader reader);
 	
 	/*
 	 * Message you are going to decode. Return null or empty to skip processing.

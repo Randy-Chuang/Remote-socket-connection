@@ -10,10 +10,20 @@ import com.google.gson.JsonObject;
 import project.remote.common.service.IOUtility;
 import project.remote.common.service.NetMessage;
 
-public class MyProtocolProcessor extends AbstractProtocolProcessor{
+public class DefaultProtocolProcessor extends AbstractProtocolProcessor{
 
-	protected MyProtocolProcessor() {
+	protected DefaultProtocolProcessor() {
 		super("Exit", "OK");
+	}
+	
+	@Override
+	protected boolean ready(BufferedReader reader) {
+		try {
+			return reader.ready();
+		} catch (IOException e) {
+			e.printStackTrace();
+			return false;
+		}
 	}
 
 	@Override
@@ -47,28 +57,35 @@ public class MyProtocolProcessor extends AbstractProtocolProcessor{
 
 	@Override
 	protected String encode(Object object) {
-		try {
-			return NetMessage.netMessageEncode((JsonObject)object);
-		} catch (UnsupportedEncodingException e) {
-			e.printStackTrace();
+		if(object instanceof JsonObject) {
+			try {
+				return NetMessage.netMessageEncode((JsonObject)object);
+			} catch (UnsupportedEncodingException e) {
+				e.printStackTrace();
+				return null;
+			}
+		}
+		else if(object instanceof String) {
+			return NetMessage.netMessageEncode((String)object);
+		}
+		else {
 			return null;
 		}
 	}
 
 	@Override
-	protected void writeOk(BufferedWriter writer) {
-		write(writer, getOkString());		
+	protected void writeOk(BufferedWriter writer) {	
+		String tosend = encode(getOkString());
+		write(writer, tosend);
 	}
 
 	@Override
 	protected void waitOkBlocking(BufferedReader reader) {
-		try {
-			String received = IOUtility.waitForDesignatedInput(reader, getOkString(), false);
-			System.out.println("Receive: " + received);
-		} catch (IOException | InterruptedException e) {
-			e.printStackTrace();
-		}
-		
+		String received;
+		do {
+			received = readResponseBlocking(reader);
+		} while (!getOkString().equals(received));
+		System.out.println("Received: " + received);
 	}
 
 	@Override
@@ -94,19 +111,16 @@ public class MyProtocolProcessor extends AbstractProtocolProcessor{
 			reader.readLine();
 			// fetch requested message with length.
 			received = IOUtility.read(reader, length);
-			
-			System.out.println(received);
-			
 		} catch (Exception e) {
 			e.printStackTrace();
 			received = null;
 		}
-		
 		return received;
 	}
 
 	@Override
 	protected void writeExit(BufferedWriter writer) {
-		write(writer, getExitString());
+		String tosend = encode(getExitString());
+		write(writer, tosend);
 	}
 }

@@ -11,19 +11,20 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import com.google.gson.JsonObject;
 
 import project.remote.common.service.MessageDecode;
 
-public class JsonRpcSocketServer implements IJsonRpcServer {
+public class RpcSocketServer implements IRpcServer {
 	private final ServerSocket serverSocket;
 	private final Map<String, Invocable> serviceMap;
 	private AbstractProtocolProcessor processor;
 	private Thread serverThread;
 	private final ExecutorService threadPool; 
 	
-	public JsonRpcSocketServer(final int portNumber) throws IOException {
+	public RpcSocketServer(final int portNumber) throws IOException {
 		this.serverSocket = new ServerSocket(portNumber);
 		this.serviceMap = new TreeMap<String, Invocable>();
 		this.threadPool = Executors.newFixedThreadPool(5);
@@ -49,14 +50,13 @@ public class JsonRpcSocketServer implements IJsonRpcServer {
 						try {
 							Runnable runnable = new ClientHandlerRunnable(s, serviceMap, processor);
 							threadPool.execute(runnable);
-//							Thread t = new Thread(runnable);
-//							t.start();
 						} catch (IOException e) {
 							s.close();
 							e.printStackTrace();
 						}
 					} catch (IOException e) {
 						e.printStackTrace();
+						return;
 					}
 				}
 			}
@@ -67,8 +67,20 @@ public class JsonRpcSocketServer implements IJsonRpcServer {
 
 	@Override
 	public void stop() {
-		// Close ServerSocket in order to terminate the blocking state of it. 
 		System.out.println("Closing server.");
+		// set interrupt flag for all actively executing thread
+		threadPool.shutdownNow();
+		while (true) {
+			try {
+				System.out.println("Waiting for the service to terminate...");
+				if (threadPool.awaitTermination(5, TimeUnit.SECONDS)) {
+					break;
+				}
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
+		// Close ServerSocket in order to terminate the blocking state of ServerSocket.accept(). 		
 		try {
 			serverSocket.close();
 			System.out.println("ServerSocket closed.");
@@ -76,7 +88,7 @@ public class JsonRpcSocketServer implements IJsonRpcServer {
 			e.printStackTrace();
 			return;
 		}
-		
+		// Close server thread.
 		serverThread.interrupt();
 		try {
 			serverThread.join();
@@ -84,7 +96,6 @@ public class JsonRpcSocketServer implements IJsonRpcServer {
 			e.printStackTrace();
 			return;
 		}
-		threadPool.shutdown();
 		System.out.println("Server closed.");
 	}
 
@@ -129,23 +140,23 @@ public class JsonRpcSocketServer implements IJsonRpcServer {
 		public void run() {
 			try {
 				// Confirming ready.
-				protocolProcessor.writeOk(writer);;
+				protocolProcessor.writeOk(writer);
 				
-				while(true) {
+				while(!Thread.currentThread().isInterrupted()) {
 					// check input with ProtocolProcessor
-					String received = protocolProcessor.read(reader);
-					if(received == null || received.isBlank()) {
+					if(!protocolProcessor.ready(reader)) {
 						System.out.println("Input buffer empty, sleep for 1000ms!");
-						Thread.sleep(1000);					
+						Thread.sleep(1000);
 						continue;
-					}
-					else if(protocolProcessor.isExit(received)) {
-						System.out.println("Client " + this.socket + " sends exit...");
-						break;
 					}
 					
 					// fetch requested message from ProtocolProcessor.
-					received = processor.decode(reader, received);
+					String received = protocolProcessor.readResponseBlocking(reader);
+					
+					if(protocolProcessor.isExit(received)) {
+						System.out.println("Client " + this.socket + " sends exit...");
+						break;
+					}
 					
 					JsonObject jsonRequest = MessageDecode.getJsonObject(received);
 					String requestMethod = MessageDecode.getMethod(jsonRequest);
@@ -169,11 +180,11 @@ public class JsonRpcSocketServer implements IJsonRpcServer {
 
 			// closing resources
 			try {
+				protocolProcessor.writeExit(writer);
 				reader.close();
 				writer.close();
-				System.out.println("Closing this connection.");
+				System.out.println("Closing current socket connection.");
 				socket.close();
-				System.out.println("Connection closed");
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
