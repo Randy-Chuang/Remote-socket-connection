@@ -5,15 +5,12 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
-import java.io.UnsupportedEncodingException;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.util.Map;
 import java.util.TreeMap;
-import java.util.function.Function;
-
-import com.google.gson.JsonObject;
 
 import project.remote.common.service.NetMessage;
 
@@ -25,7 +22,9 @@ public class RpcSocketClient implements IRpcClient{
 	private Socket socket;
 	private AbstractProtocolProcessor processor;
 	private Class<? extends AbstractProtocolProcessor> processorDefaultType = DefaultProtocolProcessor.class;
-	private final Map<String, Function<Object[], JsonObject>> requestGeneratorMap = new TreeMap<String, Function<Object[], JsonObject>>();
+	private final IFormatProcessor formatProcessor = new JsonFormatProcessor();
+
+	private final Map<String, Class<?>> returnedClassMap = new TreeMap<String, Class<?>>();
 	
 	public RpcSocketClient(final String hostAddress, final int portNumber,  Class<? extends AbstractProtocolProcessor> type) throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException {		
 		this(hostAddress, portNumber);
@@ -54,6 +53,7 @@ public class RpcSocketClient implements IRpcClient{
 		this.portNumber = portNumber;
 	}
 	
+	
 	@Override
 	public void start() {
 		try {
@@ -79,25 +79,27 @@ public class RpcSocketClient implements IRpcClient{
 			System.err.println("Connection is closed");
 			return null;
 		}
+		
+		System.out.println("params ? null "+params == null);
 
-		Function<Object[], JsonObject> designatedgenerator = requestGeneratorMap.get(method);
-		if(designatedgenerator == null) {
-			System.err.println("Request generator not found: " + method);
-			return null;
+		Class<?> objectClass = returnedClassMap.get(method);
+		String tosend, message;
+		if(objectClass != null) {
+			try {
+				Constructor<Object> constructor = (Constructor<Object>) returnedClassMap.get(method).getDeclaredConstructor();
+				
+				message = formatProcessor.encode(null, method, constructor.newInstance(), params);
+			} catch (NoSuchMethodException | SecurityException |InstantiationException | IllegalAccessException | IllegalArgumentException
+					| InvocationTargetException e) {
+				e.printStackTrace();
+				return null;
+			}
 		}
-		JsonObject jsonRequest = designatedgenerator.apply(params);
-		if(jsonRequest == null) {
-			System.err.println("Null pointer for JsonObject.");
-			return null;
+		else {
+			message = formatProcessor.encode(null, method, null, params);
 		}
 		
-		String tosend;
-		try {
-			tosend = NetMessage.netMessageEncode(jsonRequest);
-		} catch (UnsupportedEncodingException e) {
-			e.printStackTrace();
-			return null;
-		}
+		tosend = NetMessage.netMessageEncode(message);
 		
 		// Send request
 		processor.write(writer, tosend);
@@ -145,16 +147,25 @@ public class RpcSocketClient implements IRpcClient{
 	private boolean isConnectionClosed() {
 		return reader == null && writer == null && socket == null;
 	}
-	
-	
+
 	@Override
-	public void addRequestGenerator(String name, Function<Object[], JsonObject> mapper) {
-		// Check for duplication of services
-		if (requestGeneratorMap.containsKey(name)) {
-			System.err.println("Trying to override the existing request generator: " + name);
+	public void addReturnedClass(String name, Class<?> objectClass) {
+		// Check for duplication of Class type
+		if (returnedClassMap.containsKey(name)) {
+			System.err.println("Trying to override the existing Class type: " + name);
 			return;
 		}
-		// Add service
-		requestGeneratorMap.put(name, mapper);
+		// Some request doesn't need return object, such as command to server!?
+		if(objectClass != null) {
+			try {
+				Constructor<Object> constructor = (Constructor<Object>)objectClass.getDeclaredConstructor();
+			} catch (Exception e) {
+				System.err.println("No default constructor for Class: " + objectClass.getCanonicalName());
+				e.printStackTrace();
+				return;
+			}
+		}
+		// Add Class type
+		returnedClassMap.put(name, objectClass);
 	}
 }

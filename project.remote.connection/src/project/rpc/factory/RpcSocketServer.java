@@ -5,6 +5,7 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
+import java.lang.reflect.InvocationTargetException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Map;
@@ -13,21 +14,36 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-import com.google.gson.JsonObject;
+import project.remote.common.service.ServiceClass.DateInfo;
 
-import project.remote.common.service.MessageDecode;
+/*
+ * TODO: 
+ * Issues: 
+ * 1. Unable to determine the generic type of InvocationContext and Invocable when I retrieve it. 
+ * 
+ */
 
 public class RpcSocketServer implements IRpcServer {
 	private final ServerSocket serverSocket;
-	private final Map<String, Invocable> serviceMap;
+	private final Map<String, Invocable<?>> serviceMap;
 	private AbstractProtocolProcessor processor;
+	// default value, shall be designated by user
+	private Class<? extends IFormatProcessor> formatProcessorClass = JsonFormatProcessor.class;
 	private Thread serverThread;
 	private final ExecutorService threadPool; 
 	
 	public RpcSocketServer(final int portNumber) throws IOException {
 		this.serverSocket = new ServerSocket(portNumber);
-		this.serviceMap = new TreeMap<String, Invocable>();
+		this.serviceMap = new TreeMap<String, Invocable<?>>();
 		this.threadPool = Executors.newFixedThreadPool(5);
+	}
+	
+	public RpcSocketServer test1() {
+		return null;
+		
+	}public RpcSocketServer test2() {
+		return null;
+		
 	}
 	
 	@Override
@@ -48,9 +64,9 @@ public class RpcSocketServer implements IRpcServer {
 
 						// create a new Runnable, Thread used for client handling. 
 						try {
-							Runnable runnable = new ClientHandlerRunnable(s, serviceMap, processor);
+							Runnable runnable = new ClientHandlerRunnable(s, serviceMap, processor, formatProcessorClass);
 							threadPool.execute(runnable);
-						} catch (IOException e) {
+						} catch (Exception e) { //was IOException 
 							s.close();
 							e.printStackTrace();
 						}
@@ -100,7 +116,7 @@ public class RpcSocketServer implements IRpcServer {
 	}
 
 	@Override
-	public void addRequestHandler(String name, Invocable r) {
+	public <T> void addRequestHandler(String name, Invocable <T> r) {
 		// Check for duplication of services
 		if(serviceMap.containsKey(name)) {
 			System.err.println("Trying to override the existing service: " + name);
@@ -121,12 +137,13 @@ public class RpcSocketServer implements IRpcServer {
 		private final BufferedReader reader;
 		private final BufferedWriter writer;
 		// Service handling
-		private final Map<String, Invocable> serviceMap;
+		private final Map<String, Invocable<?>> serviceMap;
 		// Protocol message handling
 		private final AbstractProtocolProcessor protocolProcessor;
+		private final IFormatProcessor formatProcessor;
 
 		// Constructor
-		public ClientHandlerRunnable(Socket s, Map<String, Invocable> serviceMap, AbstractProtocolProcessor protocolProcessor) throws IOException {
+		public ClientHandlerRunnable(Socket s, Map<String, Invocable<?>> serviceMap, AbstractProtocolProcessor protocolProcessor, Class<? extends IFormatProcessor> formatProcessClass) throws IOException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException {
 			this.socket = s;
 			// Input and output buffer from Socket.
 			this.reader = new BufferedReader(new InputStreamReader(s.getInputStream()));
@@ -134,6 +151,8 @@ public class RpcSocketServer implements IRpcServer {
 			
 			this.serviceMap = serviceMap;
 			this.protocolProcessor = protocolProcessor;
+			
+			this.formatProcessor = formatProcessClass.getDeclaredConstructor().newInstance();
 		}
 
 		@Override
@@ -158,15 +177,20 @@ public class RpcSocketServer implements IRpcServer {
 						break;
 					}
 					
-					JsonObject jsonRequest = MessageDecode.getJsonObject(received);
-					String requestMethod = MessageDecode.getMethod(jsonRequest);
+					String requestMethod = formatProcessor.getMethod(received);
 					
-					InvocationContext requestContext = new InvocationContext();
-					requestContext.rawRequest = new String(received);
+					Object object = formatProcessor.decodeParam(received);
+					if(object != null)
+						System.out.println("canonical name: " + object.getClass().getCanonicalName());
+					InvocationContext<Object> requestContext = new InvocationContext<Object>();
+					requestContext.param = object;
 					// Invoke the designated method
-					Invocable designatedMethod = serviceMap.get(requestMethod);
+					Invocable<Object> designatedMethod = (Invocable<Object>) serviceMap.get(requestMethod);
 					designatedMethod.invoke(requestContext);
-					String tosend = protocolProcessor.encode(requestContext.returnVal);
+					
+					String replyString =  formatProcessor.encode(received, null, requestContext.returnVal);
+					
+					String tosend = protocolProcessor.encode(replyString);
 
 					// write message to output.
 					protocolProcessor.write(writer, tosend);

@@ -6,7 +6,7 @@ public interface IRpcServer {
     /*
      * Handler should assign returnVal if needed.
      */
-    public void addRequestHandler(String name, Invocable r); 
+    public <T> void addRequestHandler(String name, Invocable <T> r); 
     public void addProtocolProcessor(AbstractProtocolProcessor processor);
     
 }

@@ -2,12 +2,9 @@ package project.rpc.factory;
 
 import java.io.IOException;
 
-import com.google.gson.JsonObject;
-
-import project.remote.common.service.MessageDecode;
-import project.remote.common.service.MessageEncode;
-import project.remote.common.service.MessageField;
-import project.remote.server.service.ServerService;
+import project.remote.common.service.ServiceClass.DateInfo;
+import project.remote.common.service.ServiceClass.SystemInfo;
+import project.remote.server.service.SystemService;
 
 
 /*
@@ -43,7 +40,10 @@ import project.remote.server.service.ServerService;
  */
 public class RpcFactory {
 	
-	public static RpcFactory getSocketInstance() {
+	private RpcFactory() {}
+	
+	public static RpcFactory getInstance() {
+		
 		return new RpcFactory();
 	}
 	
@@ -66,77 +66,51 @@ public class RpcFactory {
 		int portNumber = 5056;
 		
 		/// server code
-		ServerService serverService = new ServerService();
-		RpcFactory factory = RpcFactory.getSocketInstance();
+		SystemService systemService = new SystemService();
+		RpcFactory factory = RpcFactory.getInstance();
 		IRpcServer server = factory.getSocketServer(portNumber);
-		server.addRequestHandler("getDate", (ctx) -> {
-			JsonObject jsonRequest = MessageDecode.getJsonObject(ctx.rawRequest);
-			ctx.returnVal = serverService.getServerDate(jsonRequest);
+		server.<Object>addRequestHandler("getDate", (ctx) -> {
+			ctx.returnVal = systemService.getDate();
 		});
 		
-		server.addRequestHandler("getSystemInfo", (ctx) -> {
-			JsonObject jsonRequest = MessageDecode.getJsonObject(ctx.rawRequest);
-			ctx.returnVal = serverService.getServerSystemInfo(jsonRequest);
+		server.<Object>addRequestHandler("getSystemInfo", (ctx) -> {
+			ctx.returnVal = systemService.getSystemInfo();
 		});
-		server.addRequestHandler("square", (ctx) -> {
-			JsonObject jsonRequest = MessageDecode.getJsonObject(ctx.rawRequest);
-			ctx.returnVal = serverService.getServerSquare(jsonRequest);
+		server.<Double>addRequestHandler("square", (ctx) -> {
+			ctx.returnVal = systemService.square(ctx.param);
+		});
+		
+		server.<Object[]>addRequestHandler("stringConcat", (ctx) -> {
+			ctx.returnVal = systemService.stringConcat((String)ctx.param[0], (String)ctx.param[1]);
 		});
 		
 		DefaultProtocolProcessor protocolProcessor = new DefaultProtocolProcessor();
 		server.addProtocolProcessor(protocolProcessor);
 		server.start();
 		
-//		JsonRpcSocketClient client = new JsonRpcSocketClient(hostAddrss, portNumber, AbstractProtocolProcessor.class);
 		IRpcClient client = factory.getSocketClient(hostAddrss, portNumber, protocolProcessor);
-		client.addRequestGenerator("getDate", (params) -> {
-			if(params.length == 0) {
-				return MessageEncode.encodeDateInfo(null, null);
-			}
-			else {
-				System.err.println("Invalid length of input parameters."); 
-				return null;
-			}
-		});
-		client.addRequestGenerator("getSystemInfo", (params) -> {
-			if(params.length == 0) {
-				return MessageEncode.encodeSystemInfo(null, null);
-			}
-			else {
-				System.err.println("Invalid length of input parameters."); 
-				return null;
-			}
-		});
-		client.addRequestGenerator("square", (params) -> {
-			if(params.length == 1) {
-				Double number;
-				try { // input may be an non-double number
-					number = Double.parseDouble(params[0].toString());
-				} catch (NumberFormatException e) {
-					e.printStackTrace();
-					return null;
-				}
-				JsonObject jsonRequest = MessageEncode.encodeSquare(null, null);
-				jsonRequest.addProperty(MessageField.PARAMETERS_OBJ_STRING, number);
-				return jsonRequest;
-			}
-			else {
-				System.err.println("Invalid length of input parameters."); 
-				return null;
-			}
-		});
+		client.addReturnedClass("getDate", DateInfo.class);
+		client.addReturnedClass("getSystemInfo", SystemInfo.class);
+		client.addReturnedClass("square", null);
+		client.addReturnedClass("stringConcat", String.class);
+
 		
 		
 		System.out.println("Client starts sending request----------------------");
 		
 		client.start();
 		
-		String received = (String)client.invoke("square", 1.1);
+		String received = (String)client.invoke("getDate");
 		System.out.println(received);
-		received = (String)client.invoke("getDate");
+		received = (String)client.invoke("square", 1.1);
+		System.out.println(received);
+		received = (String)client.invoke("getSystemInfo");
+		System.out.println(received);
+		received = (String)client.invoke("stringConcat", "asdf", "4356");
 		System.out.println(received);
 		
-		received = (String)client.invoke("getSystemInfo");
+		// invalid method request from client or to server 
+		received = (String)client.invoke("stringConct", "asdf", "1234");
 		System.out.println(received);
 		
 		client.stop();

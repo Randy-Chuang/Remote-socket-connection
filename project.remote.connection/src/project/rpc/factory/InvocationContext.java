@@ -1,6 +1,6 @@
 package project.rpc.factory;
 
-public class InvocationContext {
-    public String rawRequest;
+public class InvocationContext <T> {
+	public T param;
     public Object returnVal;
 }

@@ -2,7 +2,6 @@ package project.remote.common.service;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
 
@@ -48,7 +47,7 @@ public class MessageEncode extends MessageField {
 		if(dateInfo == null) {
 			dateInfo = new DateInfo();
 		}
-				
+			
 		jsonObject.add(RETURN_OBJ_STRING, gson.toJsonTree(dateInfo));
 		
 		return jsonObject;
@@ -70,8 +69,7 @@ public class MessageEncode extends MessageField {
 			systemInfo = new SystemInfo();
 		}
 		
-		JsonElement resultElement = gson.toJsonTree(systemInfo);
-		jsonObject.add(RETURN_OBJ_STRING, resultElement);
+		jsonObject.add(RETURN_OBJ_STRING, gson.toJsonTree(systemInfo));
 		
 		return jsonObject;
 	}

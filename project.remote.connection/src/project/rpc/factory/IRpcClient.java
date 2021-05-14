@@ -13,5 +13,5 @@ public interface IRpcClient {
 	 */
     public Object invoke(String method, Object... params);
     
-    public void addRequestGenerator(String name, Function<Object[], JsonObject> mapper);
+    public void addReturnedClass(String name, Class<?> objectClass);
 }

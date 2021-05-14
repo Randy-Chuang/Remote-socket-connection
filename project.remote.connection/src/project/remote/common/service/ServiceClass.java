@@ -4,6 +4,7 @@ import com.google.gson.annotations.SerializedName;
 
 public class ServiceClass {
 	public static class DateInfo{
+		public DateInfo() {}
 		public String day, month, year;
 	}
 	
