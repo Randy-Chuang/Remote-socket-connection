@@ -7,4 +7,5 @@ public interface ISystemService {
 	public DateInfo getDate();
 	public SystemInfo getSystemInfo();
 	public double square(double base);
+	public String stringConcat(String a, String b);
 }

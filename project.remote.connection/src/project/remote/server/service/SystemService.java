@@ -45,5 +45,10 @@ public class SystemService implements ISystemService{
 	public double square(double base) {
 		return Math.pow(base, 2);
 	}
+	
+	@Override
+	public String stringConcat(String a, String b) {
+		return a + b;
+	}
 
 }
