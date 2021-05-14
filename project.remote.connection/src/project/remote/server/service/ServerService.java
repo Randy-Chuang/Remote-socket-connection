@@ -1,6 +1,5 @@
 package project.remote.server.service;
 
-import com.google.common.collect.HashBiMap;
 import com.google.gson.JsonObject;
 
 import project.remote.common.service.MessageDecode;
@@ -10,12 +9,6 @@ import project.remote.common.service.ServiceClass.SystemInfo;
 
 public class ServerService implements IServerService{
 	private final static SystemService systemService = new SystemService();
-	private final static HashBiMap<String, String> systemInfoFieldMap = HashBiMap.create();
-	static {
-		systemInfoFieldMap.put("javaVersion", "Java version");
-		systemInfoFieldMap.put("jvmVersion", "JVM version");
-	}
-
 
 	@Override
 	public JsonObject getServerDate(JsonObject jsonRequest) {

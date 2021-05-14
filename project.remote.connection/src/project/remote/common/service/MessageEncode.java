@@ -1,7 +1,5 @@
 package project.remote.common.service;
 
-import java.util.Map;
-
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
@@ -73,13 +71,6 @@ public class MessageEncode extends MessageField {
 		}
 		
 		JsonElement resultElement = gson.toJsonTree(systemInfo);
-		JsonObject resultObject = resultElement.getAsJsonObject();
-		
-		for(Map.Entry<String, String> entry: systemInfoFieldMap.entrySet()) {
-			JsonElement temp = resultObject.get(entry.getKey());
-			resultObject.remove(entry.getKey());
-			resultObject.add(entry.getValue(), temp);
-		}
 		jsonObject.add(RETURN_OBJ_STRING, resultElement);
 		
 		return jsonObject;
