@@ -1,9 +1,5 @@
 package project.rpc.factory;
 
-import java.util.function.Function;
-
-import com.google.gson.JsonObject;
-
 public interface IRpcClient {
 	public void start();
 	public void stop();
@@ -11,7 +7,7 @@ public interface IRpcClient {
 	 * Be able to receive arbitrary length of arguments and  
 	 * retrieve arguments and assign to JSON field for request invocation. 
 	 */
-    public Object invoke(String method, Object... params);
+    public Object invoke(String service, Object... params);
     
-    public void addReturnedClass(String name, Class<?> objectClass);
+    public void addReturnedClass(String service, Class<?> objectClass);
 }

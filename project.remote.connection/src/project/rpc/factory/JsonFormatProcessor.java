@@ -3,12 +3,10 @@ package project.rpc.factory;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
-/*
- * TODO: 
- */
 public class JsonFormatProcessor implements IFormatProcessor {
 	public final static String METHOD_OBJ_STRING = "method", 
 								PARAMETERS_OBJ_STRING = "params",
@@ -69,8 +67,6 @@ public class JsonFormatProcessor implements IFormatProcessor {
 	
 	@Override
 	public String encode(final String refRequest, final String methodName, Object returnVal, Object... param) {
-		System.out.println("encode.is param null: " + (param == null) + ", len = " + param.length);
-		
 		JsonObject jsonObject = jsonMessageHeader.deepCopy();
 		Gson gson = new GsonBuilder().serializeNulls().create();
 		
@@ -79,7 +75,15 @@ public class JsonFormatProcessor implements IFormatProcessor {
 		}
 		else {
 			jsonObject.add(METHOD_OBJ_STRING, gson.toJsonTree(methodName));
-			jsonObject.add(PARAMETERS_OBJ_STRING, gson.toJsonTree(param));
+			if(param == null || param.length == 0) {
+				jsonObject.add(PARAMETERS_OBJ_STRING, JsonNull.INSTANCE);
+			}
+			else if(param.length == 1) {
+				jsonObject.add(PARAMETERS_OBJ_STRING, gson.toJsonTree(param[0]));
+			}
+			else {
+				jsonObject.add(PARAMETERS_OBJ_STRING, gson.toJsonTree(param));
+			}
 		}
 
 		jsonObject.add(RETURN_OBJ_STRING, gson.toJsonTree(returnVal));
@@ -88,7 +92,7 @@ public class JsonFormatProcessor implements IFormatProcessor {
 	}
 
 	@Override
-	public Object decodeParam(final String message) {	
+	public Object decodeParam(final String message, Class<?> typeClass) {	
 		JsonObject jsonObject = (JsonObject)toObjectFormat(message);
 		
 		Gson gson = new Gson();
@@ -96,16 +100,17 @@ public class JsonFormatProcessor implements IFormatProcessor {
 		if(paramElement.isJsonNull()) {
 			return null;
 		}
-		else if(paramElement.isJsonArray()) {
-			System.out.println("is json arr");
-			return gson.fromJson(paramElement, Object[].class);
+		else if(typeClass != null) {
+			return gson.fromJson(paramElement, typeClass);
 		}
-		return gson.fromJson(paramElement, Object.class);
+		else {
+			return gson.fromJson(paramElement, Object.class);
+		}
 		
 	}
 
 	@Override
-	public Object decodeReturnVal(String message) {
+	public Object decodeReturnVal(String message, Class<?> typeClass) {
 		JsonObject jsonObject = (JsonObject)toObjectFormat(message);
 		
 		Gson gson = new Gson();
@@ -113,10 +118,12 @@ public class JsonFormatProcessor implements IFormatProcessor {
 		if(paramElement.isJsonNull()) {
 			return null;
 		}
-		else if(paramElement.isJsonArray()) {
-			return gson.fromJson(paramElement, Object[].class);
+		else if(typeClass != null) {
+			return gson.fromJson(paramElement, typeClass);
 		}
-		return gson.fromJson(paramElement, Object.class);
+		else {
+			return gson.fromJson(paramElement, Object.class);
+		}
 	}
 
 	@Override
@@ -127,36 +134,17 @@ public class JsonFormatProcessor implements IFormatProcessor {
 		return gson.toJson(jsonObject);
 	}
 	
-	@Override
-	public void addMethodReturnType(String method, Class<?> type) {
-		// TODO Auto-generated method stub
+//	public static class M{
+//		Integer[] mIntegers = new Integer[] {1, 3,2 };
+//	}
+//	
+//	public static void main(String[] args) {
+//		JsonFormatProcessor processor = new JsonFormatProcessor();
+//		String string = processor.encode(null, "asdf", 1, null);
+//		System.out.println(string);
+//		
+//		System.out.println(processor.decodeReturnVal(string, int.class));
+//		
+//	}
 		
-	}
-
-	@Override
-	public Class<?> getMethodReturnType(String method) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public void addMethodParamType(String method, Class<?> type) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public Class<?> getMethodParamType(String method) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-	
-	
-	public static void main(String[] args) {
-		JsonFormatProcessor processor = new JsonFormatProcessor();
-		Object[] arr = new Object[] { "asdf", new Integer(123), new Double[] {1.0,4.0 ,2.0,3.0}, new Integer(123)};
-		String string = processor.encode(null, "getDate", arr, null);
-		arr = (Object[])processor.decodeParam(string);
-	}
-
 }

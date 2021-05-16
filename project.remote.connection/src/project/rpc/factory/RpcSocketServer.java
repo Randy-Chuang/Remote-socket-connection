@@ -1,10 +1,8 @@
 package project.rpc.factory;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -14,23 +12,22 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-import project.remote.common.service.ServiceClass.DateInfo;
-
 /*
  * TODO: 
  * Issues: 
  * 1. Unable to determine the generic type of InvocationContext and Invocable when I retrieve it. 
- * 
  */
 
 public class RpcSocketServer implements IRpcServer {
-	private final ServerSocket serverSocket;
+	private ServerSocket serverSocket;
 	private final Map<String, Invocable<?>> serviceMap;
-	private AbstractProtocolProcessor processor;
 	// default value, shall be designated by user
+	private IFormatProcessor formatProcessor = null;
 	private Class<? extends IFormatProcessor> formatProcessorClass = JsonFormatProcessor.class;
-	private Thread serverThread;
-	private final ExecutorService threadPool; 
+	private final Map<String, Class<?>> paramClassMap = new TreeMap<String, Class<?>>();
+	private Class<? extends AbstractProtocolProcessor> protocolProcessorClass = DefaultProtocolProcessor.class;
+	private Thread serverThread; 
+	private ExecutorService threadPool; 
 	
 	public RpcSocketServer(final int portNumber) throws IOException {
 		this.serverSocket = new ServerSocket(portNumber);
@@ -38,16 +35,42 @@ public class RpcSocketServer implements IRpcServer {
 		this.threadPool = Executors.newFixedThreadPool(5);
 	}
 	
-	public RpcSocketServer test1() {
-		return null;
-		
-	}public RpcSocketServer test2() {
-		return null;
-		
+	public RpcSocketServer setProtocolProcessor(Class<? extends AbstractProtocolProcessor> type) {
+		if(type.getCanonicalName().equals(AbstractProtocolProcessor.class.getCanonicalName())) {
+			System.err.println(AbstractProtocolProcessor.class.getCanonicalName() + ", the base abstract class contains "
+					+ "several abstract methods which are not compatible in practice of protocol processing and control.");
+			System.err.println(protocolProcessorClass.getCanonicalName() + ", the default protocol process would be adopted instead.");
+		}
+		else {
+			protocolProcessorClass = type;
+		}
+		return this;
+	}
+	
+	public RpcSocketServer setFormatProcessor(Class<? extends IFormatProcessor> type) {
+		if(type.getCanonicalName().equals(IFormatProcessor.class.getCanonicalName())) {
+			System.err.println(IFormatProcessor.class.getCanonicalName() + ", the base interface contains "
+					+ "several unimplemented methods which are not compatible in practice of format processing.");
+			System.err.println(formatProcessorClass.getCanonicalName() + ", the default format process would be adopted instead.");
+		}
+		else {
+			formatProcessorClass = type;
+		}
+		return this;
 	}
 	
 	@Override
 	public void start() {
+		
+		try {
+			formatProcessor = formatProcessorClass.getDeclaredConstructor().newInstance();
+		} catch (InstantiationException | IllegalAccessException | IllegalArgumentException
+				| InvocationTargetException | NoSuchMethodException | SecurityException e) {
+			formatProcessor = null;
+			e.printStackTrace();
+			return;
+		}
+		
 		// Process server task with multithreading.
 		serverThread = new Thread(new Runnable() {
 			// Thread task for socket server.
@@ -64,7 +87,7 @@ public class RpcSocketServer implements IRpcServer {
 
 						// create a new Runnable, Thread used for client handling. 
 						try {
-							Runnable runnable = new ClientHandlerRunnable(s, serviceMap, processor, formatProcessorClass);
+							Runnable runnable = new ClientHandlerRunnable(s);
 							threadPool.execute(runnable);
 						} catch (Exception e) { //was IOException 
 							s.close();
@@ -77,10 +100,9 @@ public class RpcSocketServer implements IRpcServer {
 				}
 			}
 		});
-		
 		serverThread.start();
 	}
-
+	
 	@Override
 	public void stop() {
 		System.out.println("Closing server.");
@@ -127,50 +149,55 @@ public class RpcSocketServer implements IRpcServer {
 	}
 	
 	@Override
-	public void addProtocolProcessor(AbstractProtocolProcessor processor) {
-		this.processor = processor;
+	public void addParameterClass(String service, Class<?> objectClass) {
+		// Check for duplication of Class type
+		if (paramClassMap.containsKey(service)) {
+			System.err.println("Trying to override the existing Class type: " + service);
+			return;
+		}
+		// Add Class type
+		paramClassMap.put(service, objectClass);
 	}
-	
 	
 	private class ClientHandlerRunnable implements Runnable {
 		private final Socket socket;
-		private final BufferedReader reader;
-		private final BufferedWriter writer;
 		// Service handling
 		private final Map<String, Invocable<?>> serviceMap;
-		// Protocol message handling
-		private final AbstractProtocolProcessor protocolProcessor;
+		// Protocol and Format Processor
+		private AbstractProtocolProcessor protocolProcessor;
 		private final IFormatProcessor formatProcessor;
 
-		// Constructor
-		public ClientHandlerRunnable(Socket s, Map<String, Invocable<?>> serviceMap, AbstractProtocolProcessor protocolProcessor, Class<? extends IFormatProcessor> formatProcessClass) throws IOException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException {
+		public ClientHandlerRunnable(Socket s) {
 			this.socket = s;
-			// Input and output buffer from Socket.
-			this.reader = new BufferedReader(new InputStreamReader(s.getInputStream()));
-			this.writer = new BufferedWriter(new OutputStreamWriter(s.getOutputStream()));
+			this.serviceMap = RpcSocketServer.this.serviceMap;
+			this.formatProcessor = RpcSocketServer.this.formatProcessor;
 			
-			this.serviceMap = serviceMap;
-			this.protocolProcessor = protocolProcessor;
-			
-			this.formatProcessor = formatProcessClass.getDeclaredConstructor().newInstance();
+			try {
+				this.protocolProcessor = RpcSocketServer.this.protocolProcessorClass.getDeclaredConstructor(InputStream.class, OutputStream.class).newInstance(socket.getInputStream(), socket.getOutputStream());
+			} catch (InstantiationException | IllegalAccessException | IllegalArgumentException
+					| InvocationTargetException | NoSuchMethodException | SecurityException | IOException e) {
+				this.protocolProcessor = null;
+				e.printStackTrace();
+				return;
+			}
 		}
 
 		@Override
 		public void run() {
 			try {
 				// Confirming ready.
-				protocolProcessor.writeOk(writer);
+				protocolProcessor.writeOk();
 				
 				while(!Thread.currentThread().isInterrupted()) {
 					// check input with ProtocolProcessor
-					if(!protocolProcessor.ready(reader)) {
+					if(!protocolProcessor.ready()) {
 						System.out.println("Input buffer empty, sleep for 1000ms!");
 						Thread.sleep(1000);
 						continue;
 					}
 					
 					// fetch requested message from ProtocolProcessor.
-					String received = protocolProcessor.readResponseBlocking(reader);
+					String received = protocolProcessor.readResponseBlocking();
 					
 					if(protocolProcessor.isExit(received)) {
 						System.out.println("Client " + this.socket + " sends exit...");
@@ -179,9 +206,8 @@ public class RpcSocketServer implements IRpcServer {
 					
 					String requestMethod = formatProcessor.getMethod(received);
 					
-					Object object = formatProcessor.decodeParam(received);
-					if(object != null)
-						System.out.println("canonical name: " + object.getClass().getCanonicalName());
+					Object object = formatProcessor.decodeParam(received, paramClassMap.get(requestMethod));
+						
 					InvocationContext<Object> requestContext = new InvocationContext<Object>();
 					requestContext.param = object;
 					// Invoke the designated method
@@ -193,7 +219,7 @@ public class RpcSocketServer implements IRpcServer {
 					String tosend = protocolProcessor.encode(replyString);
 
 					// write message to output.
-					protocolProcessor.write(writer, tosend);
+					protocolProcessor.write(tosend);
 				}
 				
 			} catch (InterruptedException e) {
@@ -204,9 +230,8 @@ public class RpcSocketServer implements IRpcServer {
 
 			// closing resources
 			try {
-				protocolProcessor.writeExit(writer);
-				reader.close();
-				writer.close();
+				protocolProcessor.writeExit();
+				protocolProcessor.close();
 				System.out.println("Closing current socket connection.");
 				socket.close();
 			} catch (IOException e) {
@@ -214,4 +239,5 @@ public class RpcSocketServer implements IRpcServer {
 			}
 		}
 	}
+	
 }
