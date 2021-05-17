@@ -21,7 +21,7 @@ public class RpcSocketClient implements IRpcClient {
 	private IFormatProcessor formatProcessor = null;
 	private Class<? extends IFormatProcessor> formatProcessorClass = JsonFormatProcessor.class;
 	// Returned type of different services
-	private final Map<String, Class<?>> returnedClassMap = new TreeMap<String, Class<?>>();
+	private final Map<String, Class<?>> returnedClassMap = new TreeMap<>();
 	
 	public RpcSocketClient(final String hostAddress, final int portNumber) {		
 		this.hostAddress = hostAddress;

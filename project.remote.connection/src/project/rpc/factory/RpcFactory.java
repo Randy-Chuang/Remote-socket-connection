@@ -8,32 +8,35 @@ import project.remote.server.service.SystemService;
 
 /*
  * TODO: 
- * 0. JSON / XML formats and convention protocol are just like accessories taken from factory.
- * Before creating an instance of IRpcServer, wishing to set the properties of Builder first. 
- * 		A. Request / Reply format: JSON - GSON  / XML - XMLEncoder 		
- * 
- * 		C. User-defined invokable: request object and return object.	
- * 
+ * 0. First-stage documentation writing. 
+ * 1. XML format.
+ * 		A. Request / Reply format: XML - XMLEncoder
  * 
  * 1.5. Responding with invalid request (wrong name of services)
- * 1.8. Dealing with unexpected disconnection (without receiving exit message)
  * 2. Invoking server service with user-defined Class (or even an array) would cause an exception while casting. 
  * 3. Manage your design of factory pattern with a clearer structure, current class hierarchy is showing below:
  * 		Factory -> JsonRpcServer/Client -> ProtocolProcessor (read, write, encode/decode NetMessage)
- * 										-> (Client) RequestGenerator (generate JsonRequest with given arguments of objects)
- * 										-> (Server) RequestHandler (Invoke corresponding service and output a replied JsonObject)
- * 4. User defined Protocol processing (seems to be a tedious job) 
- * -> how could I add different protocol to Factory and let user to modify it appropriately.  
+ * 										-> FormatProcessor (encode/decode message with specific format e.g. JSON or XML)
+ * 										-> (Server) RequestHandler (Invoke corresponding service and return with an object)
  * 5. Restructure
- * 80. Confirming that accessing same object with multiple threads won't produce any problem.
- * 90. Time out mechanism. 
+ * 80. Confirming that accessing same object with multiple threads won't produce any problem. (race condition)
+ * 90. Time out mechanism and unexpected disconnection (without receiving exit message) handling. 
  */
 public class RpcFactory {
-	
+	/**
+	 * Test for <B>javadoc</B>. 
+	 * @see #getJsonSocketServer(int)
+	 * 
+	 * @return
+	 */
 	public static RpcFactory getInstance() {
 		return new RpcFactory();
 	}
 	
+	/**
+	 * @param portNumber
+	 * @return
+	 */
 	public IRpcServer getSocketServer(int portNumber) {
 		try {
 			return new RpcSocketServer(portNumber);
@@ -59,7 +62,6 @@ public class RpcFactory {
 	public IRpcClient getJsonSocketClient(String hostAddr , int portNumber) {
 		return new RpcSocketClient(hostAddr, portNumber).setFormatProcessor(JsonFormatProcessor.class);
 	}
-	
 	
 	
 	public static void main(String[] args) {
@@ -95,7 +97,7 @@ public class RpcFactory {
 		client.start();
 		// invoke() would return the class object associated with the service
 		client.invoke("getDate");
-		client.invoke("square", 1.1);
+		client.invoke("square", 1.5);
 		client.invoke("getSystemInfo");
 		
 		client.stop();

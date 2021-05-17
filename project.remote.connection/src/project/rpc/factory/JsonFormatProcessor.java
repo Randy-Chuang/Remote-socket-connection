@@ -133,18 +133,5 @@ public class JsonFormatProcessor implements IFormatProcessor {
 		Gson gson = new GsonBuilder().serializeNulls().setPrettyPrinting().create();
 		return gson.toJson(jsonObject);
 	}
-	
-//	public static class M{
-//		Integer[] mIntegers = new Integer[] {1, 3,2 };
-//	}
-//	
-//	public static void main(String[] args) {
-//		JsonFormatProcessor processor = new JsonFormatProcessor();
-//		String string = processor.encode(null, "asdf", 1, null);
-//		System.out.println(string);
-//		
-//		System.out.println(processor.decodeReturnVal(string, int.class));
-//		
-//	}
 		
 }

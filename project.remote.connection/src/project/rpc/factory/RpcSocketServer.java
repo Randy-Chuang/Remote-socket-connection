@@ -24,7 +24,7 @@ public class RpcSocketServer implements IRpcServer {
 	// default value, shall be designated by user
 	private IFormatProcessor formatProcessor = null;
 	private Class<? extends IFormatProcessor> formatProcessorClass = JsonFormatProcessor.class;
-	private final Map<String, Class<?>> paramClassMap = new TreeMap<String, Class<?>>();
+	private final Map<String, Class<?>> paramClassMap = new TreeMap<>();
 	private Class<? extends AbstractProtocolProcessor> protocolProcessorClass = DefaultProtocolProcessor.class;
 	private Thread serverThread; 
 	private ExecutorService threadPool; 
@@ -144,6 +144,11 @@ public class RpcSocketServer implements IRpcServer {
 			System.err.println("Trying to override the existing service: " + name);
 			return;
 		}
+		
+//		Class<T> typeClass;
+//		typeClass.get
+//		System.err.println("add request param type: " + r.);
+		
 		// Add service
 		serviceMap.put(name, r);
 	}
@@ -208,7 +213,7 @@ public class RpcSocketServer implements IRpcServer {
 					
 					Object object = formatProcessor.decodeParam(received, paramClassMap.get(requestMethod));
 						
-					InvocationContext<Object> requestContext = new InvocationContext<Object>();
+					InvocationContext<Object> requestContext = new InvocationContext<>();
 					requestContext.param = object;
 					// Invoke the designated method
 					Invocable<Object> designatedMethod = (Invocable<Object>) serviceMap.get(requestMethod);
