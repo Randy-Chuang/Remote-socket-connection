@@ -2,10 +2,6 @@ package project.rpc.factory;
 
 import java.io.IOException;
 
-import project.remote.common.service.ServiceClass.DateInfo;
-import project.remote.common.service.ServiceClass.SystemInfo;
-import project.remote.server.service.SystemService;
-
 /*
  * TODO: 
  * 0. First-stage documentation writing. 
@@ -24,7 +20,8 @@ import project.remote.server.service.SystemService;
  */
 public class RpcFactory {
 	/**
-	 * Test for <B>javadoc</B>. 
+	 * Test for <B>javadoc</B>.
+	 * 
 	 * @see #getJsonSocketServer(int)
 	 * 
 	 * @return
@@ -32,7 +29,7 @@ public class RpcFactory {
 	public static RpcFactory getInstance() {
 		return new RpcFactory();
 	}
-	
+
 	/**
 	 * @param portNumber
 	 * @return
@@ -45,11 +42,11 @@ public class RpcFactory {
 			return null;
 		}
 	}
-	
-	public IRpcClient getSocketClient(String hostAddr , int portNumber) {
+
+	public IRpcClient getSocketClient(String hostAddr, int portNumber) {
 		return new RpcSocketClient(hostAddr, portNumber);
 	}
-	
+
 	public IRpcServer getJsonSocketServer(int portNumber) {
 		try {
 			return new RpcSocketServer(portNumber).setFormatProcessor(JsonFormatProcessor.class);
@@ -58,57 +55,9 @@ public class RpcFactory {
 			return null;
 		}
 	}
-	
-	public IRpcClient getJsonSocketClient(String hostAddr , int portNumber) {
+
+	public IRpcClient getJsonSocketClient(String hostAddr, int portNumber) {
 		return new RpcSocketClient(hostAddr, portNumber).setFormatProcessor(JsonFormatProcessor.class);
 	}
-	
-	
-	public static void main(String[] args) {
-		String hostAddrss = "127.0.0.1";
-		int portNumber = 5056;
-		
-		/// server code
-		SystemService systemService = new SystemService();
-		RpcFactory factory = RpcFactory.getInstance();
-		IRpcServer server = factory.getJsonSocketServer(portNumber);
-		server.addRequestHandler("getDate", (ctx) -> {
-			ctx.returnVal = systemService.getDate();
-		});
-		server.addRequestHandler("getSystemInfo", (ctx) -> {
-			ctx.returnVal = systemService.getSystemInfo();
-		});
-		server.<Double>addRequestHandler("square", (ctx) -> {
-			ctx.returnVal = systemService.square(ctx.param);
-		});
-		server.addParameterClass("getDate", null);
-		server.addParameterClass("getSystemInfo", null);
-		server.addParameterClass("square", Double.class);
-		server.start();
-		
-		/// client code
-		IRpcClient client = factory.getJsonSocketClient(hostAddrss, portNumber);
-		client.addReturnedClass("getDate", DateInfo.class);
-		client.addReturnedClass("getSystemInfo", SystemInfo.class);
-		client.addReturnedClass("square", Double.class);
-		
-		System.out.println("Client starts sending request----------------------");
-		
-		client.start();
-		// invoke() would return the class object associated with the service
-		client.invoke("getDate");
-		client.invoke("square", 1.5);
-		client.invoke("getSystemInfo");
-		
-		client.stop();
-		
-		System.out.println("Client closes socket connection ----------------------");
-	
-		try {
-			Thread.sleep(5*1000);
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
-		server.stop();
-	}
+
 }

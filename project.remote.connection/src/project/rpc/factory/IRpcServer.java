@@ -6,7 +6,5 @@ public interface IRpcServer {
     /*
      * Handler should assign returnVal if needed.
      */
-    public <T> void addRequestHandler(String service, Invocable <T> r);
-    
-    public void addParameterClass(String service, Class<?> objectClass);
+    public <T> void addRequestHandler(String service, Class<T> paramClass, Invocable <T> r);
 }

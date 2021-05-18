@@ -157,8 +157,7 @@ public class RpcSocketClient implements IRpcClient {
 	public void addReturnedClass(String name, Class<?> objectClass) {
 		// Check for duplication of Class type
 		if (returnedClassMap.containsKey(name)) {
-			System.err.println("Trying to override the existing Class type: " + name);
-			return;
+			System.err.println("The returned type of existing service will be overridden: " + name);
 		}
 		
 		try {

@@ -138,30 +138,16 @@ public class RpcSocketServer implements IRpcServer {
 	}
 
 	@Override
-	public <T> void addRequestHandler(String name, Invocable <T> r) {
+	public <T> void addRequestHandler(String name, Class<T> paramClass, Invocable <T> r) {
 		// Check for duplication of services
 		if(serviceMap.containsKey(name)) {
-			System.err.println("Trying to override the existing service: " + name);
-			return;
+			System.err.println("The existing service will be overridden: " + name);
 		}
-		
-//		Class<T> typeClass;
-//		typeClass.get
-//		System.err.println("add request param type: " + r.);
-		
 		// Add service
 		serviceMap.put(name, r);
-	}
-	
-	@Override
-	public void addParameterClass(String service, Class<?> objectClass) {
-		// Check for duplication of Class type
-		if (paramClassMap.containsKey(service)) {
-			System.err.println("Trying to override the existing Class type: " + service);
-			return;
-		}
+		
 		// Add Class type
-		paramClassMap.put(service, objectClass);
+		paramClassMap.put(name, paramClass);
 	}
 	
 	private class ClientHandlerRunnable implements Runnable {
