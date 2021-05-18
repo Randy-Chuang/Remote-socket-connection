@@ -12,6 +12,11 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import project.rpc.factory.format.IFormatProcessor;
+import project.rpc.factory.format.JsonFormatProcessor;
+import project.rpc.factory.protocol.AbstractProtocolProcessor;
+import project.rpc.factory.protocol.DefaultProtocolProcessor;
+
 /*
  * TODO: 
  * Issues: 
@@ -177,7 +182,7 @@ public class RpcSocketServer implements IRpcServer {
 		public void run() {
 			try {
 				// Confirming ready.
-				protocolProcessor.writeOk();
+				protocolProcessor.writeReady();
 				
 				while(!Thread.currentThread().isInterrupted()) {
 					// check input with ProtocolProcessor

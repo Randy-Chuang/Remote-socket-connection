@@ -10,6 +10,11 @@ import java.net.Socket;
 import java.util.Map;
 import java.util.TreeMap;
 
+import project.rpc.factory.format.IFormatProcessor;
+import project.rpc.factory.format.JsonFormatProcessor;
+import project.rpc.factory.protocol.AbstractProtocolProcessor;
+import project.rpc.factory.protocol.DefaultProtocolProcessor;
+
 public class RpcSocketClient implements IRpcClient {
 	private final String hostAddress;
 	private final int portNumber;
@@ -79,7 +84,7 @@ public class RpcSocketClient implements IRpcClient {
 			}
 			
 			// Confirming ready.
-			protocolProcessor.waitOkBlocking();
+			protocolProcessor.waitReadyBlocking();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

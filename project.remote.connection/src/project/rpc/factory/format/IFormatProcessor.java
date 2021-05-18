@@ -1,4 +1,4 @@
-package project.rpc.factory;
+package project.rpc.factory.format;
 
 public interface IFormatProcessor {
 

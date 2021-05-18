@@ -1,4 +1,4 @@
-package project.rpc.factory;
+package project.rpc.factory.format;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;

@@ -2,6 +2,8 @@ package project.rpc.factory;
 
 import java.io.IOException;
 
+import project.rpc.factory.format.JsonFormatProcessor;
+
 /*
  * TODO: 
  * 0. First-stage documentation writing. 
@@ -17,6 +19,11 @@ import java.io.IOException;
  * 5. Restructure
  * 80. Confirming that accessing same object with multiple threads won't produce any problem. (race condition)
  * 90. Time out mechanism and unexpected disconnection (without receiving exit message) handling. 
+ */
+
+/**
+ * Class RpcFactory provides the design of <B>Factory Pattern</B> to help you  
+ *
  */
 public class RpcFactory {
 	/**

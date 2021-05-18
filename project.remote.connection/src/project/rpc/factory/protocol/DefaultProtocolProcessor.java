@@ -1,4 +1,4 @@
-package project.rpc.factory;
+package project.rpc.factory.protocol;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -18,7 +18,7 @@ public class DefaultProtocolProcessor extends AbstractProtocolProcessor {
 	private BufferedReader reader;
 	private BufferedWriter writer;
 
-	protected DefaultProtocolProcessor(InputStream inStream, OutputStream outStream) {
+	public DefaultProtocolProcessor(InputStream inStream, OutputStream outStream) {
 		super("Exit", "OK");
 		// Encapsulate input and output stream.
 		this.reader = new BufferedReader(new InputStreamReader(inStream));
@@ -26,7 +26,7 @@ public class DefaultProtocolProcessor extends AbstractProtocolProcessor {
 	}
 	
 	@Override
-	protected boolean ready() {
+	public boolean ready() {
 		try {
 			return reader.ready();
 		} catch (IOException e) {
@@ -36,9 +36,9 @@ public class DefaultProtocolProcessor extends AbstractProtocolProcessor {
 	}
 
 	@Override
-	protected String read() {
+	public String read() {
 		try {
-			if(reader.ready()) {
+			if(ready()) {
 				return reader.readLine();
 			}
 		} catch (IOException e) {
@@ -48,7 +48,7 @@ public class DefaultProtocolProcessor extends AbstractProtocolProcessor {
 	}
 
 	@Override
-	protected String decode(String header) {
+	public String decode(String header) {
 		String received;
 		try {
 			// Decode for header and get the length of request.
@@ -65,7 +65,7 @@ public class DefaultProtocolProcessor extends AbstractProtocolProcessor {
 	}
 
 	@Override
-	protected String encode(Object object) {
+	public String encode(Object object) {
 		if(object instanceof JsonObject) {
 			try {
 				return NetMessage.netMessageEncode((JsonObject)object);
@@ -83,24 +83,24 @@ public class DefaultProtocolProcessor extends AbstractProtocolProcessor {
 	}
 
 	@Override
-	protected void writeOk() {	
-		String tosend = encode(getOkString());
+	public void writeReady() {	
+		String tosend = encode(getReadyString());
 		write(tosend);
 	}
 
 	@Override
-	protected void waitOkBlocking() {
+	public void waitReadyBlocking() {
 		System.out.print("Protocol Processor waits for ready message... ");
 		String received;
 		do {
 			received = readResponseBlocking();
-		} while (!getOkString().equals(received));
+		} while (!getReadyString().equals(received));
 		System.out.println(received);
 		System.out.flush();
 	}
 
 	@Override
-	protected void write(String tosend) {
+	public void write(String tosend) {
 		try {
 			writer.write(tosend, 0, tosend.length());
 			writer.flush();
@@ -112,7 +112,7 @@ public class DefaultProtocolProcessor extends AbstractProtocolProcessor {
 	 * Wait for formatted response defined by protocol.
 	 */
 	@Override
-	protected String readResponseBlocking() {
+	public String readResponseBlocking() {
 		String received;
 		try {
 			received = IOUtility.waitForNextLine(reader);
@@ -130,13 +130,13 @@ public class DefaultProtocolProcessor extends AbstractProtocolProcessor {
 	}
 
 	@Override
-	protected void writeExit() {
+	public void writeExit() {
 		String tosend = encode(getExitString());
 		write(tosend);
 	}
 
 	@Override
-	protected void close() {	
+	public void close() {	
 		try {
 			if(reader != null) {
 				reader.close();
@@ -152,7 +152,7 @@ public class DefaultProtocolProcessor extends AbstractProtocolProcessor {
 	}
 
 	@Override
-	protected boolean isclosed() {
+	public boolean isclosed() {
 		return reader == null && writer == null;
 	}
 	
