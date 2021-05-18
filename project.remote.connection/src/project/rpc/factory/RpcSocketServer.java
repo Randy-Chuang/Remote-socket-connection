@@ -23,16 +23,23 @@ import project.rpc.factory.protocol.DefaultProtocolProcessor;
  * 1. Unable to determine the generic type of InvocationContext and Invocable when I retrieve it. 
  */
 
+/**
+ * 
+ * @author randy
+ *
+ */
 public class RpcSocketServer implements IRpcServer {
 	private ServerSocket serverSocket;
 	private final Map<String, Invocable<?>> serviceMap;
+	private Thread serverThread; 
+	private ExecutorService threadPool; 
+	
 	// default value, shall be designated by user
 	private IFormatProcessor formatProcessor = null;
 	private Class<? extends IFormatProcessor> formatProcessorClass = JsonFormatProcessor.class;
 	private final Map<String, Class<?>> paramClassMap = new TreeMap<>();
 	private Class<? extends AbstractProtocolProcessor> protocolProcessorClass = DefaultProtocolProcessor.class;
-	private Thread serverThread; 
-	private ExecutorService threadPool; 
+	
 	
 	public RpcSocketServer(final int portNumber) throws IOException {
 		this.serverSocket = new ServerSocket(portNumber);
@@ -155,21 +162,34 @@ public class RpcSocketServer implements IRpcServer {
 		paramClassMap.put(name, paramClass);
 	}
 	
+	/**
+	 * Rnuuable class that are going to provide server services to each client in an dedicated thread. 
+	 *
+	 */
 	private class ClientHandlerRunnable implements Runnable {
 		private final Socket socket;
 		// Service handling
 		private final Map<String, Invocable<?>> serviceMap;
 		// Protocol and Format Processor
 		private AbstractProtocolProcessor protocolProcessor;
+		// Message format processing
 		private final IFormatProcessor formatProcessor;
 
+		/**
+		 * Initializes a newly created Runnable object with an accepted socket connection.
+		 */
 		public ClientHandlerRunnable(Socket s) {
 			this.socket = s;
+			// Constant reference used for service handling
 			this.serviceMap = RpcSocketServer.this.serviceMap;
+			// Constant reference used for message format processing 
 			this.formatProcessor = RpcSocketServer.this.formatProcessor;
 			
+			// Create a dedicated protocol processor used for communication. 
 			try {
-				this.protocolProcessor = RpcSocketServer.this.protocolProcessorClass.getDeclaredConstructor(InputStream.class, OutputStream.class).newInstance(socket.getInputStream(), socket.getOutputStream());
+				this.protocolProcessor = RpcSocketServer.this.protocolProcessorClass
+						.getDeclaredConstructor(InputStream.class, OutputStream.class)
+						.newInstance(socket.getInputStream(), socket.getOutputStream());
 			} catch (InstantiationException | IllegalAccessException | IllegalArgumentException
 					| InvocationTargetException | NoSuchMethodException | SecurityException | IOException e) {
 				this.protocolProcessor = null;
