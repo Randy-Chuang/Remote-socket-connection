@@ -1,59 +1,119 @@
 package project.rpc.factory.protocol;
 
+/**
+ * Abstract Class with addressed superficial interfaces used for sending / fetching 
+ * message according to specific protocol. 
+ *
+ */
 public abstract class AbstractProtocolProcessor{
+	// Strings used for claiming particular state or command. 
 	private String exitString, readyString;
 	
+	/**
+	 * Initialize common request / reply message used in protocol communication. 
+	 * @param exitString the string used as a exiting signal. 
+	 * @param readyString the string used to signal a ready state. 
+	 */
 	public AbstractProtocolProcessor(String exitString, String readyString) {
 		this.exitString = exitString;
 		this.readyString = readyString;
 	}
-	
+	/**
+	 * Check if given message is an exit message. 
+	 * @param message the message to be examined. 
+	 * @return true if the given message is exit message; false otherwise. 
+	 */
 	public boolean isExit(String message) {
 		return this.exitString.equals(message);
 	}
+	/**
+	 * Setup exit message. 
+	 * @param exitString the reference to exit message. 
+	 */
 	public void setExitString(String exitString) {
 		this.exitString = exitString;
 	}
+	/**
+	 * Get current exit message. 
+	 * @return the exit message. 
+	 */
 	public String getExitString() {
 		return exitString;
 	}
-	
+	/**
+	 * Check if given message is a ready message. 
+	 * @param message the message to be examined. 
+	 * @return true if the given message is ready message; false otherwise. 
+	 */
 	public boolean isReady(String message) {
 		return this.readyString.equals(message);
 	}
+	/**
+	 * Setup ready message. 
+	 * @param readyString the reference to ready message. 
+	 */
 	public void setReadyString(String readyString) {
 		this.readyString = readyString;
 	}
+	/**
+	 * Get current ready message. 
+	 * @return the ready message. 
+	 */
 	public String getReadyString() {
 		return readyString;
 	}
-	
-	
+	/**
+	 * Check input is ready or not (non-blocking method).   
+	 * @return true if there is something to be received; false otherwise. 
+	 */
 	public abstract boolean ready();
-	
-	/*
-	 * Message you are going to decode. Return null or empty to skip processing.
+	/**
+	 * Read a line of input (non-blocking method). 
+	 * @return a line of input with the line separator removed. 
 	 */
-	public abstract String read();
-	/*
-	 * Decode message / header, BufferedReader is used for reading further input for decode. 
+	public abstract String readLine();
+	/**
+	 * Decode protocol header and fetch/decode for further input according to protocol. 
+	 * @param header the protocol header which encapsulates with info about network message. 
+	 * @return 
 	 */
-	public abstract String decode(String header);
+	protected abstract String decode(String header);
+	/**
+	 * Encode object / message according to protocol. 
+	 * @param object the content to be encapsulated in protocol communication. 
+	 * @return the protocol encapsulated message.  
+	 */
+	protected abstract String encode(Object object);
 	
-	public abstract String encode(Object object);
-	
-	
+	/**
+	 * Write ready message. 
+	 */
 	public abstract void writeReady();
 	
 	public abstract void waitReadyBlocking();
-	
+	/**
+	 * Write exit message. 
+	 */
 	public abstract void writeExit();
-	
-	public abstract void write(String tosend);
-	
+	/**
+	 * 
+	 * @param object
+	 */
+	public abstract void write(Object object);
+	/**
+	 * Read the protocol formatted message from input and decode for inner message in return. 
+	 * @return 
+	 */
 	public abstract String readResponseBlocking(); 
 	
+	protected abstract void send(String tosend);
+	/**
+	 * Close related resources (I/O) to protocol processor. 
+	 */
 	public abstract void close();
-	
+	/**
+	 * Check if protocol processor is closed. 
+	 * @return true if protocol processor is closed; false otherwise. 
+	 */
 	public abstract boolean isclosed();
 }

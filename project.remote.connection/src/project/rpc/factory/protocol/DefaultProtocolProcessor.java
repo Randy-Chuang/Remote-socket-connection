@@ -36,7 +36,7 @@ public class DefaultProtocolProcessor extends AbstractProtocolProcessor {
 	}
 
 	@Override
-	public String read() {
+	public String readLine() {
 		try {
 			if(ready()) {
 				return reader.readLine();
@@ -48,7 +48,7 @@ public class DefaultProtocolProcessor extends AbstractProtocolProcessor {
 	}
 
 	@Override
-	public String decode(String header) {
+	protected String decode(String header) {
 		String received;
 		try {
 			// Decode for header and get the length of request.
@@ -65,7 +65,7 @@ public class DefaultProtocolProcessor extends AbstractProtocolProcessor {
 	}
 
 	@Override
-	public String encode(Object object) {
+	protected String encode(Object object) {
 		if(object instanceof JsonObject) {
 			try {
 				return NetMessage.netMessageEncode((JsonObject)object);
@@ -85,7 +85,7 @@ public class DefaultProtocolProcessor extends AbstractProtocolProcessor {
 	@Override
 	public void writeReady() {	
 		String tosend = encode(getReadyString());
-		write(tosend);
+		send(tosend);
 	}
 
 	@Override
@@ -100,13 +100,9 @@ public class DefaultProtocolProcessor extends AbstractProtocolProcessor {
 	}
 
 	@Override
-	public void write(String tosend) {
-		try {
-			writer.write(tosend, 0, tosend.length());
-			writer.flush();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+	public void write(Object object) {
+		String tosend = encode(object);
+		send(tosend);
 	}
 	/*
 	 * Wait for formatted response defined by protocol.
@@ -128,11 +124,21 @@ public class DefaultProtocolProcessor extends AbstractProtocolProcessor {
 		}
 		return received;
 	}
+	
+	@Override
+	protected void send(String tosend) {
+		try {
+			writer.write(tosend, 0, tosend.length());
+			writer.flush();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
 
 	@Override
 	public void writeExit() {
 		String tosend = encode(getExitString());
-		write(tosend);
+		send(tosend);
 	}
 
 	@Override

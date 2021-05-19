@@ -15,6 +15,10 @@ import project.rpc.factory.format.JsonFormatProcessor;
 import project.rpc.factory.protocol.AbstractProtocolProcessor;
 import project.rpc.factory.protocol.DefaultProtocolProcessor;
 
+/**
+ * The implementation of socket client that connects to the socket server for service invocation.   
+ *
+ */
 public class RpcSocketClient implements IRpcClient {
 	private final String hostAddress;
 	private final int portNumber;
@@ -28,11 +32,21 @@ public class RpcSocketClient implements IRpcClient {
 	// Returned type of different services
 	private final Map<String, Class<?>> returnedClassMap = new TreeMap<>();
 	
+	/**
+	 * Initialize the socket client with server info. 
+	 * @param hostAddress the host address of the socket server (either IP or URL address). 
+	 * @param portNumber the port number of the socket server. 
+	 */
 	public RpcSocketClient(final String hostAddress, final int portNumber) {		
 		this.hostAddress = hostAddress;
 		this.portNumber = portNumber;
 	}
 	
+	/**
+	 * Setup the class type of protocol processor used for encoding/decoding protocolary message. 
+	 * @param type the Class type used for creating protocol processor.
+	 * @return the instance of this socket client. 
+	 */
 	public RpcSocketClient setProtocolProcessor(Class<? extends AbstractProtocolProcessor> type) {
 		if(type.getCanonicalName().equals(AbstractProtocolProcessor.class.getCanonicalName())) {
 			System.err.println(AbstractProtocolProcessor.class.getCanonicalName() + ", the base abstract class contains "
@@ -45,6 +59,11 @@ public class RpcSocketClient implements IRpcClient {
 		return this;
 	}
 	
+	/**
+	 * Setup the class type of format processor used for encoding/decoding service request and reply. 
+	 * @param type the Class type used for creating format processor.
+	 * @return the instance of this socket client. 
+	 */
 	public RpcSocketClient setFormatProcessor(Class<? extends IFormatProcessor> type) {
 		if(type.getCanonicalName().equals(IFormatProcessor.class.getCanonicalName())) {
 			System.err.println(IFormatProcessor.class.getCanonicalName() + ", the base interface contains "
@@ -57,23 +76,27 @@ public class RpcSocketClient implements IRpcClient {
 		return this;
 	}
 	
-	
+	/**
+	 * Start client socket connection. 
+	 */
 	@Override
 	public void start() {
 		try {
-			// establish the connection with server IP address and port.
+			// establish the connection with server host address and port.
 			InetAddress ip = InetAddress.getByName(hostAddress);
 			socket = new Socket(ip, portNumber);
-
+			// Create a ProtocolProcessor used for communication. 
 			try {
-				protocolProcessor = protocolProcessorClass.getDeclaredConstructor(InputStream.class, OutputStream.class).newInstance(socket.getInputStream(), socket.getOutputStream());
+				protocolProcessor = protocolProcessorClass
+						.getDeclaredConstructor(InputStream.class, OutputStream.class)
+						.newInstance(socket.getInputStream(), socket.getOutputStream());
 			} catch (InstantiationException | IllegalAccessException | IllegalArgumentException
 					| InvocationTargetException | NoSuchMethodException | SecurityException e) {
 				protocolProcessor = null;
 				e.printStackTrace();
 				return;
 			}
-			
+			// Create a FormatProcessor. 
 			try {
 				formatProcessor = formatProcessorClass.getDeclaredConstructor().newInstance();
 			} catch (InstantiationException | IllegalAccessException | IllegalArgumentException
@@ -82,7 +105,6 @@ public class RpcSocketClient implements IRpcClient {
 				e.printStackTrace();
 				return;
 			}
-			
 			// Confirming ready.
 			protocolProcessor.waitReadyBlocking();
 		} catch (IOException e) {
@@ -90,48 +112,13 @@ public class RpcSocketClient implements IRpcClient {
 		}
 	}
 	
-	@Override
-	public Object invoke(String method, Object... params) {
-		if(protocolProcessor.isclosed()) {
-			System.err.println("Connection is closed");
-			return null;
-		}
-		
-		String tosend, message;
-		try {
-			Constructor<?> constructor = returnedClassMap.get(method).getDeclaredConstructor();
-			message = formatProcessor.encode(null, method, constructor.newInstance(), params);
-		} catch (NoSuchMethodException | SecurityException |InstantiationException | IllegalAccessException | IllegalArgumentException
-				| InvocationTargetException | NullPointerException e) {
-			message = formatProcessor.encode(null, method, null, params);
-		}		
-		tosend = protocolProcessor.encode(message);
-
-		// Send request
-		protocolProcessor.write(tosend);
-		
-		String received = protocolProcessor.readResponseBlocking();
-		
-		System.out.println("Client received:----\n" + formatProcessor.prettyOutput(received));
-		
-		if(protocolProcessor.isExit(received)) {
-			try {
-				closeResource();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-			return received;
-		}
-		else {
-			return formatProcessor.decodeReturnVal(received, returnedClassMap.get(method));
-		}
-		
-	}
-
+	/**
+	 * Stop client socket connection. 
+	 */
 	@Override
 	public void stop() {
 		try {
-			if(!isConnectionClosed()) {
+			if(isConnected()) {
 				protocolProcessor.writeExit();
 			}
 			// closing resources completely
@@ -141,30 +128,91 @@ public class RpcSocketClient implements IRpcClient {
 		}
 	}
 	
+	/**
+	 * Close all resources related to the socket client. 
+	 * @throws IOException if encountering a problem in closing Socket. 
+	 */
 	private void closeResource() throws IOException {
-		protocolProcessor.close();
-		protocolProcessor = null;
-		formatProcessor = null;
+		if(protocolProcessor != null) {
+			protocolProcessor.close();
+		}
 		if(socket != null) {
 			socket.close();
-			socket = null;
 		}
 	}
 	
-	private boolean isConnectionClosed() {
-		return protocolProcessor.isclosed() && socket == null;
+	/**
+	 * Check if the connection of socket client has been closed. 
+	 * @return true if the connection socket client has been closed; false otherwise. 
+	 */
+	private boolean isConnected() {
+		return (protocolProcessor != null && !protocolProcessor.isclosed()) && 
+				(socket != null && !socket.isClosed());
 	}
-
-	/*
-	 * Used for decoding returned object and generating request message. 
+	
+	/**
+	 * Invoke designated service with required parameter. 
+	 * @param method the name of the service. 
+	 * @param params the required parameter of the service. 
+	 * @return the object returned by the service. 
 	 */
 	@Override
+	public Object invoke(String method, Object... params) {
+		// Check socket connection. 
+		if(!isConnected()) {
+			System.err.println("Connection is closed!");
+			return null;
+		}
+		
+		String tosend, message;
+		/// Request generating and sending. -----
+		// Generate request message. 
+		try {
+			// Returned type with default constructor. 
+			Constructor<?> constructor = returnedClassMap.get(method).getDeclaredConstructor();
+			message = formatProcessor.encode(null, method, constructor.newInstance(), params);
+		} catch (NoSuchMethodException | SecurityException |InstantiationException | IllegalAccessException | IllegalArgumentException
+				| InvocationTargetException | NullPointerException e) {
+			// Returned type without default constructor. 
+			message = formatProcessor.encode(null, method, null, params);
+		}
+		// Encapsulate message according with protocol and send it. 
+		protocolProcessor.write(message);
+		
+		/// Reply fetching and decoding. -----
+		// Wait for response. 
+		String received = protocolProcessor.readResponseBlocking();
+		
+		System.out.println("Client received:----\n" + formatProcessor.prettyOutput(received));
+		
+		// Check if received message is exit signal.
+		if(protocolProcessor.isExit(received)) {
+			try {
+				closeResource();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			return received;
+		}
+		else {
+			// Decode "return" section from received message with returned type. 
+			return formatProcessor.decodeReturnVal(received, returnedClassMap.get(method));
+		}
+		
+	}
+
+	/**
+     * Setup the returned object class type for a service. 
+     * @param name the name of the service. 
+     * @param objectClass the returned type of the service. 
+     */
+	@Override
 	public void addReturnedClass(String name, Class<?> objectClass) {
-		// Check for duplication of Class type
+		// Check for duplication from registered services. 
 		if (returnedClassMap.containsKey(name)) {
 			System.err.println("The returned type of existing service will be overridden: " + name);
 		}
-		
+		// Check if there is a default constructor to generate a non-null "return" section in request. 
 		try {
 			if(objectClass != null) {
 				objectClass.getDeclaredConstructor();
@@ -173,8 +221,7 @@ public class RpcSocketClient implements IRpcClient {
 			System.err.println(objectClass.getCanonicalName() + " doesn't have a default constructor. "
 					+ "Therefore, the \"return\" section in request message wouldn't be anything but a null keyword.");
 		}
-		
-		// Add Class type
+		// Add the Class type of service return value. 
 		returnedClassMap.put(name, objectClass);
 	}
 
