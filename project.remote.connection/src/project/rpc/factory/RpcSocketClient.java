@@ -185,12 +185,13 @@ public class RpcSocketClient implements IRpcClient {
 		
 		// Check if received message is exit signal.
 		if(protocolProcessor.isExit(received)) {
+			System.out.println("Client receive exit message!");
 			try {
 				closeResource();
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
-			return received;
+			return null;
 		}
 		else {
 			// Decode "return" section from received message with returned type. 

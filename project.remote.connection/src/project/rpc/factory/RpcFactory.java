@@ -14,11 +14,11 @@ import project.rpc.factory.format.XmlFormatProcessor;
  * 		[x] Format Processor 
  * 		[x] Protocol Processor 
  * 
- * 2. Responding with invalid request (wrong name of services, wrong format json <-> xml)
- * 3. Time out mechanism and unexpected disconnection (without receiving exit message) handling. 
- * 
  * --------------------
- * 10. Supporting multiple input parameters.
+ * 10. Supporting multiple input parameters. 
+ * 11. Complete mechanism to handle / resolve any possible scenario occurred in practice. 
+ * 		Mechanism: Time out, 
+ * 		Scenario: unexpected disconnection (without receiving exit message), wrong format (currently, throw exception and exit)
  * 
  * - Current class hierarchy is showing below:
  * 		Factory -> JsonRpcServer/Client -> ProtocolProcessor (read, write, encode/decode NetMessage)
