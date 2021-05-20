@@ -1,3 +1,4 @@
+project.remote.common.service
 project.rpc.factory
 project.rpc.factory.format
 project.rpc.factory.protocol

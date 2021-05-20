@@ -23,9 +23,9 @@ public class JsonFormatProcessor implements IFormatProcessor {
 		jsonMessageHeader.add("jsonrpc", gson.toJsonTree("2.0"));
 		jsonMessageHeader.add("id", gson.toJsonTree(1));
 	}
-	// Gson object used for serialization / deserialization
-	private Gson gson = new GsonBuilder().serializeNulls().create();
-	private Gson prettyGson = new GsonBuilder().serializeNulls().setPrettyPrinting().create();
+	// Gson object used for serialization / deserialization. (thread-safe indicated by Gson documentation)
+	private static Gson gson = new GsonBuilder().serializeNulls().create();
+	private static Gson prettyGson = new GsonBuilder().serializeNulls().setPrettyPrinting().create();
 	// JSON parser used for parsing string into JsonObject. 
 	private JsonParser jsonParser = new JsonParser();
 	

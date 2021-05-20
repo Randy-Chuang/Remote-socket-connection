@@ -12,7 +12,7 @@ import com.google.gson.JsonObject;
 import project.remote.common.service.IOUtility;
 import project.remote.common.service.MessageEncode;
 import project.remote.common.service.MessageField;
-import project.remote.common.service.NetMessage;
+import project.remote.common.service.LspBaseProtocol;
 
 /*
  * TODO:
@@ -46,19 +46,19 @@ public class Client {
 			// square method
 			JsonObject jsonRequest = MessageEncode.encodeSquare(null, null);
 			jsonRequest.addProperty(MessageField.PARAMETERS_OBJ_STRING, 2.2);
-			String tosend = NetMessage.netMessageEncode(jsonRequest);
+			String tosend = LspBaseProtocol.encode(jsonRequest, false);
 			IOUtility.write(writer, tosend);
 			waitForResponse(reader);
 
 			// getSystemInfo method
 			jsonRequest = MessageEncode.encodeSystemInfo(null, null);
-			tosend = NetMessage.netMessageEncode(jsonRequest);
+			tosend = LspBaseProtocol.encode(jsonRequest, false);
 			IOUtility.write(writer, tosend);
 			waitForResponse(reader);
 
 			// getDateInfo method
 			jsonRequest = MessageEncode.encodeDateInfo(null, null);
-			tosend = NetMessage.netMessageEncode(jsonRequest);
+			tosend = LspBaseProtocol.encode(jsonRequest, false);
 			IOUtility.write(writer, tosend);
 			waitForResponse(reader);
 
@@ -83,7 +83,7 @@ public class Client {
 		String received = IOUtility.waitForNextLine(reader);
 		
 		// Decode for header and get the length of request.
-		int length = NetMessage.decodeHeader(received);
+		int length = LspBaseProtocol.decodeHeader(received);
 		// skip a line. 
 		reader.readLine();
 		// fetch requested message with length.

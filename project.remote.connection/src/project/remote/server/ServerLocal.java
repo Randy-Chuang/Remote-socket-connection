@@ -10,7 +10,7 @@ import com.google.gson.JsonObject;
 
 import project.remote.common.service.IOUtility;
 import project.remote.common.service.MessageDecode;
-import project.remote.common.service.NetMessage;
+import project.remote.common.service.LspBaseProtocol;
 import project.remote.server.service.ServerService;
 
 public class ServerLocal {
@@ -47,7 +47,7 @@ public class ServerLocal {
 				}
 				
 				// Decode for header and get the length of request.
-				int length = NetMessage.decodeHeader(received);
+				int length = LspBaseProtocol.decodeHeader(received);
 				// skip a line. 
 				reader.readLine();
 				// fetch requested message with length.
@@ -60,15 +60,15 @@ public class ServerLocal {
 				switch (requestMethod) {
 				case "getDate":
 					jsonReply = serverService.getServerDate(jsonRequest);
-					tosend = NetMessage.netMessageEncode(jsonReply);
+					tosend = LspBaseProtocol.encode(jsonReply, true);
 					break;
 				case "getSystemInfo":
 					jsonReply = serverService.getServerSystemInfo(jsonRequest);
-					tosend = NetMessage.netMessageEncode(jsonReply);
+					tosend = LspBaseProtocol.encode(jsonReply, true);
 					break;
 				case "square":
 					jsonReply = serverService.getServerSquare(jsonRequest);
-					tosend = NetMessage.netMessageEncode(jsonReply);
+					tosend = LspBaseProtocol.encode(jsonReply, true);
 					break;
 				default:
 					tosend = "Invalid Input";

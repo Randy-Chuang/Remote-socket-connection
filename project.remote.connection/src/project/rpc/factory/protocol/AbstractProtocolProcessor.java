@@ -62,16 +62,18 @@ public abstract class AbstractProtocolProcessor{
 	public String getReadyString() {
 		return readyString;
 	}
+	
+	
 	/**
 	 * Check input is ready or not (non-blocking method).   
 	 * @return true if there is something to be received; false otherwise. 
 	 */
 	public abstract boolean ready();
 	/**
-	 * Read a line of input (non-blocking method). 
-	 * @return a line of input with the line separator removed. 
+	 * Simply send the string through the output. 
+	 * @param tosend the string to be sent to the output. 
 	 */
-	public abstract String readLine();
+	protected abstract void send(String tosend);
 	/**
 	 * Decode protocol header and fetch/decode for further input according to protocol. 
 	 * @param header the protocol header which encapsulates with info about network message. 
@@ -86,27 +88,28 @@ public abstract class AbstractProtocolProcessor{
 	protected abstract String encode(Object object);
 	
 	/**
+	 * Read the protocol formatted message from input and decode for inner message in return. 
+	 * @return the inner message encapsulated according protocol.
+	 */
+	public abstract String readAndDecode(); 
+	/**
 	 * Write ready message. 
 	 */
 	public abstract void writeReady();
-	
+	/**
+	 * 	Wait until ready message received. 
+	 */
 	public abstract void waitReadyBlocking();
 	/**
 	 * Write exit message. 
 	 */
 	public abstract void writeExit();
 	/**
-	 * 
-	 * @param object
+	 * Write the given object / message. 
+	 * @param object the content to be sent to the output (the actual Class of object should override <b>toString()</b> method). 
 	 */
 	public abstract void write(Object object);
-	/**
-	 * Read the protocol formatted message from input and decode for inner message in return. 
-	 * @return 
-	 */
-	public abstract String readResponseBlocking(); 
 	
-	protected abstract void send(String tosend);
 	/**
 	 * Close related resources (I/O) to protocol processor. 
 	 */

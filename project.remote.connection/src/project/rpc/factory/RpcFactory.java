@@ -5,9 +5,7 @@ import java.io.IOException;
 import project.rpc.factory.format.JsonFormatProcessor;
 
 /*
- * TODO: 
- * 0: current sate -> writing first-staged java doc for protocol processor, issues identified as the problem of method usability in protocol processor (please refer to todo 2.2).  
- * 
+ * TODO:
  * 1. XML format.
  * 		A. Request / Reply format: XML - XMLEncoder
  * 1.2. Currently, we use lambda expression to register our system service, and the system service is invoked by object methods (not static), is it safe to do so? 
@@ -15,13 +13,12 @@ import project.rpc.factory.format.JsonFormatProcessor;
  * 2. Invoking server service with user-defined Class (or even an array) would cause an exception while casting. 
  * 2.1. The method IFormatProcessor.encode() may be a little bit complicated. Maybe I shall change it into the form of 
  * 		encode(String method, Object returnVal, Object parameter)
- * 2.2. Making sure the usages of all the abstract methods. Default protocol processor could use IOUtility only (protocol encode / decode should be self-crafted in the same file).  
  * 3. Second or final stage of Java doc. 
- * 4. Restructure (' ': not done yet, 'x': first-stage or temporary state, 'v': complete stage)
+ * 4. Restructure ('x': first-stage or temporary state, 'v': complete stage)
  * 		[x] Factory pattern (XML format, changes to make it brief and easy to understand, IFormatProcessor.encode())
- * 		[ ] Format Processor 
- * 		[ ] Protocol Processor 
- * 80. Confirming that accessing same object with multiple threads won't produce any problem. (race condition)
+ * 		[x] Format Processor 
+ * 		[x] Protocol Processor 
+ * 80. Confirming that accessing same object with multiple threads won't produce any problem. (race condition, thread safe)
  * 90. Time out mechanism and unexpected disconnection (without receiving exit message) handling. 
  * 
  * 

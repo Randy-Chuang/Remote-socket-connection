@@ -237,7 +237,7 @@ public class RpcSocketServer implements IRpcServer {
 						continue;
 					}
 					// Fetch requested message.
-					String received = protocolProcessor.readResponseBlocking(); 
+					String received = protocolProcessor.readAndDecode(); 
 					// Check if received message is exit request. 
 					if(protocolProcessor.isExit(received)) {
 						System.out.println("Client " + this.socket + " sends exit...");
@@ -261,7 +261,7 @@ public class RpcSocketServer implements IRpcServer {
 					// Encapsulate message according with protocol and send it. 
 					protocolProcessor.write(replyString);
 				}
-			} catch (InterruptedException e) {
+			} catch (InterruptedException e) { 
 				e.printStackTrace();
 			} catch (Exception e) {
 				e.printStackTrace();

@@ -6,9 +6,36 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 
 public class IOUtility {
+	// Issues: method ready() doesn't guarantee the input buffer contain any new line character.
+//	/**
+//	 * Read a line of input (non-blocking method). 
+//	 * @param reader 
+//	 * @return a line of input with the line separator removed. 
+//	 * @throws IOException 
+//	 */
+//	public static String readLineNonBlocking(BufferedReader reader) throws IOException {
+//		if(reader.ready()) {
+//			return reader.readLine();
+//		}
+//		return null;
+//	}
 	
-	/*
+	/**
+	 * Read a line of input (blocking method). 
+	 * @param reader
+	 * @return a line of input with the line separator removed. 
+	 * @throws IOException
+	 */
+	public static String readLineBlocking(BufferedReader reader) throws IOException {
+		return reader.readLine();
+	}
+	
+	/**
 	 * Wait for next line for BufferedReader. 
+	 * @param reader
+	 * @return
+	 * @throws IOException
+	 * @throws InterruptedException
 	 */
 	public static String waitForNextLine(BufferedReader reader) throws IOException, InterruptedException {
 		String text = "";

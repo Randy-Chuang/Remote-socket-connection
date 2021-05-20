@@ -181,7 +181,7 @@ public class RpcSocketClient implements IRpcClient {
 		
 		/// Reply fetching and decoding. -----
 		// Wait for response. 
-		String received = protocolProcessor.readResponseBlocking();
+		String received = protocolProcessor.readAndDecode();
 		
 		System.out.println("Client received:----\n" + formatProcessor.prettyOutput(received));
 		
