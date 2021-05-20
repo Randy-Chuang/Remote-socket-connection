@@ -232,7 +232,7 @@ public class RpcSocketServer implements IRpcServer {
 				while(!Thread.currentThread().isInterrupted()) {
 					// Check input.
 					if(!protocolProcessor.ready()) {
-						System.out.println("Input buffer empty, sleep for 1000ms!");
+//						System.out.println("Input buffer empty, sleep for 1000ms!");
 						Thread.sleep(1000);
 						continue;
 					}

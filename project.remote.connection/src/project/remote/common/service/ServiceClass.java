@@ -4,8 +4,14 @@ import com.google.gson.annotations.SerializedName;
 
 public class ServiceClass {
 	public static class DateInfo{
-		public DateInfo() {}
 		public String day, month, year;
+		
+		public void printContent() {
+			System.out.println("--DateInfo--");
+			System.out.println("day: " + day);
+			System.out.println("month: " + month);
+			System.out.println("year: " + year);
+		}
 	}
 	
 	public static class SystemInfo{
@@ -16,5 +22,16 @@ public class ServiceClass {
 		public String javaVersion;
 		@SerializedName("JVM version")
 		public String jvmVersion;
+		
+		public void printContent() {
+			System.out.println("--SystemInfo--");
+			System.out.println("name: " + name);
+			System.out.println("version: " + version);
+			System.out.println("architecture: " + architecture);
+			System.out.println("processors: " + processors);
+			System.out.println("load: " + load);
+			System.out.println("javaVersion: " + javaVersion);
+			System.out.println("jvmVersion: " + jvmVersion);
+		}
 	}
 }

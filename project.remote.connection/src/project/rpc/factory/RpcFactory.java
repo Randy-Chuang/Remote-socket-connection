@@ -7,25 +7,23 @@ import project.rpc.factory.format.XmlFormatProcessor;
 
 /*
  * TODO:
- * 1.2. Currently, we use lambda expression to register our system service, and the system service is invoked by object methods (not static), is it safe to do so? 
- * 1.5. Responding with invalid request (wrong name of services)
- * 2. Invoking server service with user-defined Class (or even an array) would cause an exception while casting. 
- * 2.1. The method IFormatProcessor.encode() may be a little bit complicated. Maybe I shall change it into the form of 
- * 		encode(String method, Object returnVal, Object parameter)
- * 3. Second or final stage of Java doc. 
- * 4. Restructure ('x': first-stage or temporary state, 'v': complete stage)
- * 		[x] Factory pattern (XML format, changes to make it brief and easy to understand, IFormatProcessor.encode())
+ * 0. writing doc: mention that the system service should be thread safe (or using static method)
+ * 
+ * 1. Restructure ('x': first-stage or temporary state, 'v': complete stage)
+ * 		[x] Factory pattern (Client: invoke with specified object class type => invoke("getDate", DateInfo.class))
  * 		[x] Format Processor 
  * 		[x] Protocol Processor 
- * 80. Confirming that accessing same object with multiple threads won't produce any problem. (race condition, thread safe)
- * 90. Time out mechanism and unexpected disconnection (without receiving exit message) handling. 
  * 
+ * 2. Responding with invalid request (wrong name of services, wrong format json <-> xml)
+ * 3. Time out mechanism and unexpected disconnection (without receiving exit message) handling. 
+ * 
+ * --------------------
+ * 10. Supporting multiple input parameters.
  * 
  * - Current class hierarchy is showing below:
  * 		Factory -> JsonRpcServer/Client -> ProtocolProcessor (read, write, encode/decode NetMessage)
  * 										-> FormatProcessor (encode/decode message with specific format e.g. JSON or XML)
  * 										-> (Server) RequestHandler (Invoke corresponding service and return with an object)
- *
  */
 
 /**

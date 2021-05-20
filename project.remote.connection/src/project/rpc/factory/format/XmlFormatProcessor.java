@@ -66,11 +66,15 @@ public class XmlFormatProcessor implements IFormatProcessor {
 		XmlMessage xmlMessage = new XmlMessage();
 		xmlMessage.method = method;
 		xmlMessage.retObject = returnVal;
-		if(param != null && param.length == 1) {
+		if(param == null || param.length == 0) {
+			xmlMessage.paramObject = null;
+		}
+		else if(param.length == 1) {
 			xmlMessage.paramObject = param[0];
 		}
 		else {
-			xmlMessage.paramObject = null;
+			System.err.println("Currently, only accpt up to one parameter for encoding!");
+			return null;
 		}
 		
 		return serializeToString(xmlMessage);

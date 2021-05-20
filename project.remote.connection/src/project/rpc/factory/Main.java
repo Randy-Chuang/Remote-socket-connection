@@ -28,18 +28,20 @@ public class Main {
 		/// client code
 //		IRpcClient client = factory.getJsonSocketClient(hostAddrss, portNumber);
 		IRpcClient client = factory.getXmlSocketClient(hostAddrss, portNumber);
-		client.addReturnedClass("getDate", DateInfo.class);
-		client.addReturnedClass("getSystemInfo", SystemInfo.class);
-		client.addReturnedClass("square", Double.class);
 
 		System.out.println("Client starts sending request----------------------");
 
 		client.start();
 		// invoke() would return the class object associated with the service
-		client.invoke("getDate");
-		client.invoke("square", 1.5);
-		client.invoke("getSystemInfo");
-
+		DateInfo dateInfo = (DateInfo)client.invoke("getDate", DateInfo.class);
+		dateInfo.printContent();
+		
+		Double square = (Double)client.invoke("square", Double.class, 1.5);
+		System.out.println("--Square--\n" + square);
+		
+		SystemInfo systemInfo = (SystemInfo)client.invoke("getSystemInfo", SystemInfo.class);
+		systemInfo.printContent();
+		
 		client.stop();
 
 		System.out.println("Client closes socket connection ----------------------");

@@ -71,7 +71,8 @@ public class JsonFormatProcessor implements IFormatProcessor {
 			jsonObject.add(PARAMETERS_OBJ_STRING, gson.toJsonTree(param[0]));
 		}
 		else {
-			jsonObject.add(PARAMETERS_OBJ_STRING, gson.toJsonTree(param));
+			System.err.println("Currently, only accpt up to one parameter for encoding!");
+			return null;
 		}
 
 		jsonObject.add(RETURN_OBJ_STRING, gson.toJsonTree(returnVal));
@@ -97,6 +98,7 @@ public class JsonFormatProcessor implements IFormatProcessor {
 			return gson.fromJson(paramElement, typeClass);
 		}
 		else {
+			System.err.println("Null argument of parameter type addressing!");
 			return gson.fromJson(paramElement, Object.class);
 		}
 		
