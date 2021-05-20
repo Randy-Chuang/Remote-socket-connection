@@ -10,6 +10,8 @@ package project.rpc.factory;
 public interface Invocable <T> {    
 	/**
 	 * Invoking this function represents invoking a registered service.
+	 * <p>
+	 * The related info shall be retrieved from or stored into <b>InvocationContext</b>.
 	 * @param requestContext the required info that are related to invoke this method (registered service). 
 	 */
     public void invoke(InvocationContext<T> requestContext);

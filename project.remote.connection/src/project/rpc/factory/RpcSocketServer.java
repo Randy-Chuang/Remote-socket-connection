@@ -18,14 +18,15 @@ import project.rpc.factory.protocol.AbstractProtocolProcessor;
 import project.rpc.factory.protocol.DefaultProtocolProcessor;
 
 /**
- * The implementation of socket server that provides client handling in multi-threading.   
+ * The implementation of socket server that provides client handling in <b>multi-threading</b>.   
  *
  */
 public class RpcSocketServer implements IRpcServer {
 	private ServerSocket serverSocket;
 	private final Map<String, Invocable<?>> serviceMap;
 	private Thread serverThread; 
-	private ExecutorService threadPool; 
+	private ExecutorService threadPool;
+	private boolean serverRunning = false;
 	
 	// default value, shall be designated by user
 	private IFormatProcessor formatProcessor = null;
@@ -46,34 +47,50 @@ public class RpcSocketServer implements IRpcServer {
 	
 	/**
 	 * Setup the class type of protocol processor used for encoding / decoding protocolary message in client handling. 
+	 * <p>
+	 * The side effect of returning current instance could help you configure RpcSocketServer in one statement by invoking 
+	 * configuring methods continuously. 
 	 * @param type the Class type used for creating protocol processor.
 	 * @return the instance of this socket server. 
 	 */
 	public RpcSocketServer setProtocolProcessor(Class<? extends AbstractProtocolProcessor> type) {
-		if(type.getCanonicalName().equals(AbstractProtocolProcessor.class.getCanonicalName())) {
-			System.err.println(AbstractProtocolProcessor.class.getCanonicalName() + ", the base abstract class contains "
-					+ "several abstract methods which are not compatible in practice of protocol processing and control.");
-			System.err.println(protocolProcessorClass.getCanonicalName() + ", the default protocol process would be adopted instead.");
+		if(serverRunning == false) {
+			if(type.getCanonicalName().equals(AbstractProtocolProcessor.class.getCanonicalName())) {
+				System.err.println(AbstractProtocolProcessor.class.getCanonicalName() + ", the base abstract class contains "
+						+ "several abstract methods which are not compatible in practice of protocol processing and control.");
+				System.err.println(protocolProcessorClass.getCanonicalName() + ", the default protocol process would be adopted instead.");
+			}
+			else {
+				protocolProcessorClass = type;
+			}
 		}
 		else {
-			protocolProcessorClass = type;
+			System.err.println("Unable to setup configuration while server is runnning.");
 		}
 		return this;
 	}
 	
 	/**
 	 * Setup the class type of format processor used for encoding/decoding service request and reply. 
+	 * <p>
+	 * The side effect of returning current instance could help you configure RpcSocketServer in one statement by invoking 
+	 * configuring methods continuously. 
 	 * @param type the Class type used for creating format processor.
 	 * @return the instance of this socket server. 
 	 */
 	public RpcSocketServer setFormatProcessor(Class<? extends IFormatProcessor> type) {
-		if(type.getCanonicalName().equals(IFormatProcessor.class.getCanonicalName())) {
-			System.err.println(IFormatProcessor.class.getCanonicalName() + ", the base interface contains "
-					+ "several unimplemented methods which are not compatible in practice of format processing.");
-			System.err.println(formatProcessorClass.getCanonicalName() + ", the default format process would be adopted instead.");
+		if(serverRunning == false) {
+			if(type.getCanonicalName().equals(IFormatProcessor.class.getCanonicalName())) {
+				System.err.println(IFormatProcessor.class.getCanonicalName() + ", the base interface contains "
+						+ "several unimplemented methods which are not compatible in practice of format processing.");
+				System.err.println(formatProcessorClass.getCanonicalName() + ", the default format process would be adopted instead.");
+			}
+			else {
+				formatProcessorClass = type;
+			}
 		}
 		else {
-			formatProcessorClass = type;
+			System.err.println("Unable to setup configuration while server is runnning.");
 		}
 		return this;
 	}
@@ -83,6 +100,7 @@ public class RpcSocketServer implements IRpcServer {
 	 */	
 	@Override
 	public void start() {
+		serverRunning = true;
 		// Create a FormatProcessor. 
 		try {
 			formatProcessor = formatProcessorClass.getDeclaredConstructor().newInstance();
@@ -130,6 +148,7 @@ public class RpcSocketServer implements IRpcServer {
      */
 	@Override
 	public void stop() {
+		serverRunning =false;
 		System.out.println("Closing server.");
 		// set interrupt flag for all actively executing thread and wait all threads to terminate.
 		threadPool.shutdownNow();
@@ -163,11 +182,14 @@ public class RpcSocketServer implements IRpcServer {
 	}
 	
 	/**
-     * Add a service to the socket server. 
-     * @param <T> the parameter type for this service. 
+     * Add a service to server. 
+     * <p>
+     * Caution: This class is an implementation of multithreaded client handling server, 
+     * be sure to add <b>thread-safe</b> service handlers or simply <b>static methods</b>. 
+     * @param <T> the parameter type of this service. 
      * @param name the name of service. 
      * @param paramClass the class of parameter type for this service. 
-     * @param r the actual instance that are going to handle this service. 
+     * @param r the actual instance of a functional interface that are going to handle this service. 
      */
 	@Override
 	public <T> void addRequestHandler(String name, Class<T> paramClass, Invocable <T> r) {
@@ -221,7 +243,7 @@ public class RpcSocketServer implements IRpcServer {
 		 * The mechanism of handling client request singly. 
 		 * <p> 
 		 * When ClientHandlerRunnable is used for creating a thread, 
-		 * starting the thread causes the object's run method to be called in that separately executing thread. 
+		 * starting the thread causes the object's run() method to be called in that separately executing thread. 
 		 */
 		@Override
 		public void run() {

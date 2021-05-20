@@ -1,1 +1,1 @@
-packageSearchIndex = [{"l":"All Packages","url":"allpackages-index.html"},{"l":"project.rpc.factory.format"},{"l":"project.rpc.factory.protocol"}]
+packageSearchIndex = [{"l":"All Packages","url":"allpackages-index.html"},{"l":"project.rpc.factory"},{"l":"project.rpc.factory.format"},{"l":"project.rpc.factory.protocol"}]

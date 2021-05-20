@@ -15,7 +15,7 @@ public interface IRpcClient {
 	/**
 	 * Invoke designated service with required parameter. 
 	 * @param service the name of the service. 
-	 * @param typeClass the designated returned type. 
+	 * @param typeClass the designated returned type of the service. 
 	 * @param params the required parameter of the service. 
 	 * @return the object returned by the service. 
 	 */

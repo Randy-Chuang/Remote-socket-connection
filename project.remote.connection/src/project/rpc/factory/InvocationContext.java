@@ -12,7 +12,7 @@ public class InvocationContext <T> {
 	 */
 	public T param;
 	/**
-	 * The returned object left by invoking a registered service. 
+	 * The returned object got by invoking a registered service. 
 	 */
     public Object returnVal;
 }

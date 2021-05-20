@@ -1,7 +1,7 @@
 package project.rpc.factory.format;
 
 /**
- * The interface to encode / decode message according to a specific format. 
+ * The interface used for encoding / decoding message according to a specific format. 
  *
  */
 public interface IFormatProcessor {
@@ -12,17 +12,11 @@ public interface IFormatProcessor {
 	 */
 	public String getMethod(final String message);
 	/**
-	 * Convert the formatted message into object associated with the adopted parser. 
-	 * @param message the formatted message. 
-	 * @return object associated with the adopted parser.
-	 */
-//	public Object toObjectFormat(final String message);
-	/**
 	 * Encode the given info into a formatted message. 
-	 * @param method
-	 * @param returnVal
-	 * @param param
-	 * @return
+	 * @param method the service (method) name field in formatted message.
+	 * @param returnVal the object for return field in formatted message. 
+	 * @param param the object for parameter field in formatted message.  
+	 * @return the encoded formatted message.
 	 */
 	public String encode(String method, Object returnVal, Object... param);
 	/**

@@ -7,12 +7,8 @@ import project.rpc.factory.format.XmlFormatProcessor;
 
 /*
  * TODO:
- * 0. writing doc: mention that the system service should be thread safe (or using static method)
- * 
- * 1. Restructure ('x': first-stage or temporary state, 'v': complete stage)
- * 		[x] Factory pattern (Client: invoke with specified object class type => invoke("getDate", DateInfo.class))
- * 		[x] Format Processor 
- * 		[x] Protocol Processor 
+ * 0. writing doc: lost the link to external class reference (com.google.gson.JsonObject)
+ * 0.5. writing user guide: mention that the system service should be thread safe (or using static method)
  * 
  * --------------------
  * 10. Supporting multiple input parameters. 
@@ -21,9 +17,9 @@ import project.rpc.factory.format.XmlFormatProcessor;
  * 		Scenario: unexpected disconnection (without receiving exit message), wrong format (currently, throw exception and exit)
  * 
  * - Current class hierarchy is showing below:
- * 		Factory -> JsonRpcServer/Client -> ProtocolProcessor (read, write, encode/decode NetMessage)
- * 										-> FormatProcessor (encode/decode message with specific format e.g. JSON or XML)
- * 										-> (Server) RequestHandler (Invoke corresponding service and return with an object)
+ * 		Factory -> RpcSocketServer/Client -> ProtocolProcessor (read, write, encode/decode NetMessage)
+ * 										  -> FormatProcessor (encode/decode message with specific format e.g. JSON or XML)
+ * 										  -> (Server) RequestHandler (Invoke corresponding service and return with an object)
  */
 
 /**
@@ -43,30 +39,33 @@ import project.rpc.factory.format.XmlFormatProcessor;
  *  <li>Format Processing: </li>
  *      <ul>
  *          <li>JSON Format (Default)</li>
+ *          <li>XML Format</li>
  *      </ul>
  * </ul>
  * 
- * @version 1.0
+ * @version 1.2
  *
  */
 public class RpcFactory {
 	/**
-	 * Get the instance of RpcFactory. 
+	 * Get a new instance of RpcFactory. 
+	 * @return a new instance of RpcFactory. 
 	 */
 	public static RpcFactory getInstance() {
 		return new RpcFactory();
 	}
 
 	/**
-	 * Get an instance of <b>IRpcServer</b> with socket connection and JSON message format in default.  
+	 * Get an instance of <b>IRpcServer</b> with socket connection and JSON message format as default.  
 	 * @param portNumber Port number which provides the server services. 
+	 * @throws IOException if fail to create the ServerSocket due to some reasons (i.e. occupied port).
 	 */
-	public IRpcServer getSocketServer(int portNumber) {
+	public IRpcServer getSocketServer(int portNumber) throws IOException {
 		return getJsonSocketServer(portNumber);
 	}
 
 	/**
-	 * Get an instance of <b>IRpcClient</b> with socket connection and JSON message format in default.  
+	 * Get an instance of <b>IRpcClient</b> with socket connection and JSON message format as default.  
 	 * @param hostAddr Host address of the server, it could be either IP or URL address. 
 	 * @param portNumber Corresponding port number that provides the server services. 
 	 */
@@ -77,27 +76,19 @@ public class RpcFactory {
 	/**
 	 * Get an instance of <b>IRpcServer</b> with socket connection and JSON message format.  
 	 * @param portNumber Port number which provides the server services. 
+	 * @throws IOException if fail to create the ServerSocket due to some reasons (i.e. occupied port).
 	 */
-	public IRpcServer getJsonSocketServer(int portNumber) {
-		try {
-			return new RpcSocketServer(portNumber).setFormatProcessor(JsonFormatProcessor.class);
-		} catch (IOException e) {
-			e.printStackTrace();
-			return null;
-		}
+	public IRpcServer getJsonSocketServer(int portNumber) throws IOException {
+		return new RpcSocketServer(portNumber).setFormatProcessor(JsonFormatProcessor.class);
 	}
 	
 	/**
 	 * Get an instance of <b>IRpcServer</b> with socket connection and XML message format.  
 	 * @param portNumber Port number which provides the server services. 
+	 * @throws IOException if fail to create the ServerSocket due to some reasons (i.e. occupied port).
 	 */
-	public IRpcServer getXmlSocketServer(int portNumber) {
-		try {
-			return new RpcSocketServer(portNumber).setFormatProcessor(XmlFormatProcessor.class);
-		} catch (IOException e) {
-			e.printStackTrace();
-			return null;
-		}
+	public IRpcServer getXmlSocketServer(int portNumber) throws IOException {
+		return new RpcSocketServer(portNumber).setFormatProcessor(XmlFormatProcessor.class);
 	}
 
 	/**

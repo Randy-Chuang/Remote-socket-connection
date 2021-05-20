@@ -1,5 +1,7 @@
 package project.remote.server;
 
+import java.io.IOException;
+
 import project.remote.common.service.ServiceClass.DateInfo;
 import project.remote.common.service.ServiceClass.SystemInfo;
 import project.remote.server.service.SystemService;
@@ -15,8 +17,14 @@ public class FactoryDemo {
 		/// server code
 		SystemService systemService = new SystemService();
 		RpcFactory factory = RpcFactory.getInstance();
-//		IRpcServer server = factory.getJsonSocketServer(portNumber);
-		IRpcServer server = factory.getXmlSocketServer(portNumber);
+		IRpcServer server;
+		try {
+//			server = factory.getJsonSocketServer(portNumber);
+			server = factory.getXmlSocketServer(portNumber);
+		} catch (IOException e) {
+			e.printStackTrace();
+			return;
+		}
 		server.addRequestHandler("getDate", null, (ctx) -> {
 			ctx.returnVal = systemService.getDate();
 		});

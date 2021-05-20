@@ -40,10 +40,14 @@ public class RpcSocketClient implements IRpcClient {
 	
 	/**
 	 * Setup the class type of protocol processor used for encoding/decoding protocolary message. 
+	 * <p>
+	 * The side effect of returning current instance could help you configure RpcSocketClient in one statement by invoking 
+	 * configuring methods continuously. 
 	 * @param type the Class type used for creating protocol processor.
 	 * @return the instance of this socket client. 
 	 */
 	public RpcSocketClient setProtocolProcessor(Class<? extends AbstractProtocolProcessor> type) {
+		// setup during client is running won't cause any change, since the instance of processor has been created. 
 		if(type.getCanonicalName().equals(AbstractProtocolProcessor.class.getCanonicalName())) {
 			System.err.println(AbstractProtocolProcessor.class.getCanonicalName() + ", the base abstract class contains "
 					+ "several abstract methods which are not compatible in practice of protocol processing and control.");
@@ -57,10 +61,14 @@ public class RpcSocketClient implements IRpcClient {
 	
 	/**
 	 * Setup the class type of format processor used for encoding/decoding service request and reply. 
+	 * <p>
+	 * The side effect of returning current instance could help you configure RpcSocketClient in one statement by invoking 
+	 * configuring methods continuously. 
 	 * @param type the Class type used for creating format processor.
 	 * @return the instance of this socket client. 
 	 */
 	public RpcSocketClient setFormatProcessor(Class<? extends IFormatProcessor> type) {
+		// setup during client is running won't cause any change, since the instance of processor has been created. 
 		if(type.getCanonicalName().equals(IFormatProcessor.class.getCanonicalName())) {
 			System.err.println(IFormatProcessor.class.getCanonicalName() + ", the base interface contains "
 					+ "several unimplemented methods which are not compatible in practice of format processing.");
@@ -148,13 +156,13 @@ public class RpcSocketClient implements IRpcClient {
 	
 	/**
 	 * Invoke designated service with required parameter. 
-	 * @param service the name of the service. 
-	 * @param typeClass the designated returned type. 
+	 * @param method the name of the service. 
+	 * @param typeClass the designated returned type of the service. 
 	 * @param params the required parameter of the service. 
 	 * @return the object returned by the service. 
 	 */
 	@Override
-	public Object invoke(String method, Class<?> typecClass, Object... params) {
+	public Object invoke(String method, Class<?> typeClass, Object... params) {
 		// Check socket connection. 
 		if(!isConnected()) {
 			System.err.println("Connection is closed!");
@@ -166,7 +174,7 @@ public class RpcSocketClient implements IRpcClient {
 		// Generate request message. 
 		try {
 			// Returned type with default constructor. 
-			Constructor<?> constructor = typecClass.getDeclaredConstructor();
+			Constructor<?> constructor = typeClass.getDeclaredConstructor();
 			message = formatProcessor.encode(method, constructor.newInstance(), params);
 		} catch (NoSuchMethodException | SecurityException |InstantiationException | IllegalAccessException | IllegalArgumentException
 				| InvocationTargetException | NullPointerException e) {
@@ -195,9 +203,8 @@ public class RpcSocketClient implements IRpcClient {
 		}
 		else {
 			// Decode "return" section from received message with returned type. 
-			return formatProcessor.decodeReturnVal(received, typecClass);
+			return formatProcessor.decodeReturnVal(received, typeClass);
 		}
-		
 	}
 
 }

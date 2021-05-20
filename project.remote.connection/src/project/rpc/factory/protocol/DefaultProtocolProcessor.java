@@ -121,7 +121,7 @@ public class DefaultProtocolProcessor extends AbstractProtocolProcessor {
 	}
 
 	/**
-	 * Write ready message. 
+	 * Write ready message to output. 
 	 */
 	@Override
 	public void writeReady() {	
@@ -130,7 +130,7 @@ public class DefaultProtocolProcessor extends AbstractProtocolProcessor {
 	}
 
 	/**
-	 * 	Wait until ready message received. 
+	 * 	Wait until ready message received from input. 
 	 */
 	@Override
 	public void waitReadyBlocking() {
@@ -145,7 +145,7 @@ public class DefaultProtocolProcessor extends AbstractProtocolProcessor {
 	}
 
 	/**
-	 * Write exit message. 
+	 * Write exit message to output. 
 	 */
 	@Override
 	public void writeExit() {
@@ -154,7 +154,7 @@ public class DefaultProtocolProcessor extends AbstractProtocolProcessor {
 	}
 	
 	/**
-	 * Write the given object / message. 
+	 * Write the given object / message to output. 
 	 * @param object the content to be sent to the output (the actual Class of object should override <b>toString()</b> method). 
 	 */
 	@Override
@@ -197,20 +197,21 @@ public class DefaultProtocolProcessor extends AbstractProtocolProcessor {
 	private static class BufferedIOUtility { 
 		/**
 		 * Read a line of input (blocking method). 
-		 * @param reader
+		 * @param reader the instance of input object. 
 		 * @return a line of input with the line separator removed. 
-		 * @throws IOException
+		 * @throws IOException if error occurred while reading line from BufferedReader.
 		 */
 		public static String readLineBlocking(BufferedReader reader) throws IOException {
 			return reader.readLine();
 		}
 		
 		/**
-		 * Wait for next line for BufferedReader. 
-		 * @param reader
-		 * @return
-		 * @throws IOException
-		 * @throws InterruptedException
+		 * Read a non-blank line from BufferedReader. 
+		 * @param reader the instance of input object. 
+		 * @return the next non-blank line. 
+		 * @throws IOException if error occurred while reading line from BufferedReader.
+		 * @throws InterruptedException if any thread has interrupted the current thread 
+		 * and it would make Thread.sleep() to clear interrupted status of the current thread throw this exception.
 		 */
 		public static String waitForNextLine(BufferedReader reader) throws IOException, InterruptedException {
 			String text = "";
@@ -225,35 +226,15 @@ public class DefaultProtocolProcessor extends AbstractProtocolProcessor {
 			
 			return text;
 		}
-		
-		public static String waitForDesignatedInput(BufferedReader reader, final String designated, final boolean caseSensitive) throws IOException, InterruptedException {
-			int matchPos = -1;
-			String string = new String(designated);
-			if(!caseSensitive) {
-				string = string.toLowerCase();
-			}
-			
-			while(matchPos < string.length() - 1) {
-				// Block until buffer ready for reading. 
-				while(!reader.ready()) {
-					Thread.sleep(10);
-				}
-				
-				char c = (char) reader.read();
-				c = (!caseSensitive) ? Character.toLowerCase(c) : c;
-				
-				if(c == string.charAt(matchPos + 1)) {
-					matchPos++;
-				}
-				else {
-					matchPos = -1;
-					System.err.println("unmatched: " + c);
-				}
-			}
-			return string;
-		}
 
 		private static final int bufferSize = 1024; 
+		/**
+		 * Read specific length of input content from BufferedReader. 
+		 * @param reader instance of input object. 
+		 * @param length the length designation. 
+		 * @return the fetched string with designated length. 
+		 * @throws IOException if error occurred while reading from BufferedReader. 
+		 */
 		public static String read(BufferedReader reader, int length) throws IOException {
 			char[] buffer = new char[bufferSize];
 			int ret;
@@ -278,7 +259,12 @@ public class DefaultProtocolProcessor extends AbstractProtocolProcessor {
 			return received;
 		}
 		
-		
+		/**
+		 * Write the string content through BufferedWriter. 
+		 * @param bufferedWriter the instance of output object. 
+		 * @param tosend the string to be sent. 
+		 * @throws IOException if error occurred in writing or flushing. 
+		 */
 		public static void write(BufferedWriter bufferedWriter, String tosend) throws IOException {
 			bufferedWriter.write(tosend, 0, tosend.length());
 			bufferedWriter.flush();

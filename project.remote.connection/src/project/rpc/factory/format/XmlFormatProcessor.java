@@ -7,15 +7,23 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
 /**
- * A format processor to encode / decode message to / from XML format. 
+ * A format processor to encode to and decode from XML format. 
  * 
  */
 public class XmlFormatProcessor implements IFormatProcessor {
+	/**
+	 * Message encapsulation class. 
+	 */
 	public static class XmlMessage{
 		public String method;
 		public Object paramObject, retObject;
 	}
 	
+	/**
+	 * Serialize the instance of XmlMessage into XML formatted string. 
+	 * @param xmlMessage the content to be encapsulated. 
+	 * @return the XML formatted string. 
+	 */
 	private static String serializeToString(XmlMessage xmlMessage) {
 	    ByteArrayOutputStream baos = new ByteArrayOutputStream();
 	    XMLEncoder encoder = new XMLEncoder(baos);
@@ -30,6 +38,11 @@ public class XmlFormatProcessor implements IFormatProcessor {
 	    return string;
 	}
 
+	/**
+	 * Deserialize from XML formatted message into an instance of XmlMessage. 
+	 * @param string the XML formatted message. 
+	 * @return the deserialized XmlMessage instance. 
+	 */
 	private static XmlMessage deserializeFromString(String string) {
 		ByteArrayInputStream bais = new ByteArrayInputStream(string.getBytes());
 	    XMLDecoder decoder = new XMLDecoder(bais);
@@ -44,8 +57,8 @@ public class XmlFormatProcessor implements IFormatProcessor {
 	}
 	
 	/**
-	 * Decode the service (method) name from formatted message.
-	 * @param message the formatted message. 
+	 * Decode the service (method) name from XML formatted message.
+	 * @param message the XML formatted message. 
 	 * @return service (method) name.
 	 */
 	@Override
@@ -55,11 +68,11 @@ public class XmlFormatProcessor implements IFormatProcessor {
 	}
 	
 	/**
-	 * Encode the given info into a formatted message. 
-	 * @param method
-	 * @param returnVal
-	 * @param param
-	 * @return
+	 * Encode the given info into a XML formatted message. 
+	 * @param method the service (method) name field in XML formatted message.
+	 * @param returnVal the object for return field in XML formatted message. 
+	 * @param param the object for parameter field in XML formatted message.  
+	 * @return the encoded XML formatted message.
 	 */
 	@Override
 	public String encode(String method, Object returnVal, Object... param) {
@@ -81,8 +94,8 @@ public class XmlFormatProcessor implements IFormatProcessor {
 	}
 
 	/**
-	 * Decode parameter from formatted message with a given class type for parsing. 
-	 * @param message the formatted message. 
+	 * Decode parameter from XML formatted message with a given class type for parsing. 
+	 * @param message the XML formatted message. 
 	 * @param typeClass the class type used for parsing parameter. 
 	 * @return the parameter object.
 	 */
@@ -93,8 +106,8 @@ public class XmlFormatProcessor implements IFormatProcessor {
 	}
 
 	/**
-	 * Decode return value from formatted message with a given class type for parsing. 
-	 * @param message the formatted message. 
+	 * Decode return value from XML formatted message with a given class type for parsing. 
+	 * @param message the XML formatted message. 
 	 * @param typeClass the class type used for parsing return value. 
 	 * @return the returned object. 
 	 */
@@ -105,12 +118,13 @@ public class XmlFormatProcessor implements IFormatProcessor {
 	}
 
 	/**
-	 * Convert the formatted message into a prettier formatted string for printing. 
+	 * Convert the XML formatted message into a prettier formatted string for printing. 
 	 * @param message the formatted message. 
 	 * @return a prettier formatted string. 
 	 */
 	@Override
-	public String prettyOutput(String message) {	
+	public String prettyOutput(String message) { 
+		// currently do nothing
 		return message;
 	}
 	

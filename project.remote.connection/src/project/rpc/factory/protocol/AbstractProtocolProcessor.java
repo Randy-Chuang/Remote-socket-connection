@@ -1,8 +1,7 @@
 package project.rpc.factory.protocol;
 
 /**
- * Abstract Class with addressed superficial interfaces used for sending / fetching 
- * message according to specific protocol. 
+ * The interface used for sending / fetching message according to specific protocol. 
  *
  */
 public abstract class AbstractProtocolProcessor{
@@ -21,7 +20,7 @@ public abstract class AbstractProtocolProcessor{
 	/**
 	 * Check if given message is an exit message. 
 	 * @param message the message to be examined. 
-	 * @return true if the given message is exit message; false otherwise. 
+	 * @return true if the given message is an exit message; false otherwise. 
 	 */
 	public boolean isExit(String message) {
 		return this.exitString.equals(message);
@@ -43,7 +42,7 @@ public abstract class AbstractProtocolProcessor{
 	/**
 	 * Check if given message is a ready message. 
 	 * @param message the message to be examined. 
-	 * @return true if the given message is ready message; false otherwise. 
+	 * @return true if the given message is a ready message; false otherwise. 
 	 */
 	public boolean isReady(String message) {
 		return this.readyString.equals(message);
@@ -93,19 +92,19 @@ public abstract class AbstractProtocolProcessor{
 	 */
 	public abstract String readAndDecode(); 
 	/**
-	 * Write ready message. 
+	 * Write ready message to output. 
 	 */
 	public abstract void writeReady();
 	/**
-	 * 	Wait until ready message received. 
+	 * 	Wait until ready message received from input. 
 	 */
 	public abstract void waitReadyBlocking();
 	/**
-	 * Write exit message. 
+	 * Write exit message to output. 
 	 */
 	public abstract void writeExit();
 	/**
-	 * Write the given object / message. 
+	 * Write the given object / message to output. 
 	 * @param object the content to be sent to the output (the actual Class of object should override <b>toString()</b> method). 
 	 */
 	public abstract void write(Object object);
