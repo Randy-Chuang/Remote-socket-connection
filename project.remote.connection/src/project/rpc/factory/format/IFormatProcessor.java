@@ -18,27 +18,13 @@ public interface IFormatProcessor {
 	 */
 	public Object toObjectFormat(final String message);
 	/**
-	 * Encode the given info of request / reply into a formatted message. 
-	 * <p> 
-	 * This is a generalized method to encode for request or encode reply with reference of request. 
-	 * @param refRequest  
-	 * @param methodName 
+	 * Encode the given info into a formatted message. 
+	 * @param method
 	 * @param returnVal
 	 * @param param
 	 * @return
 	 */
-	public String encode(final Object refRequest, final String methodName, Object returnVal, Object... param);
-	/**
-	 * Encode the given info of request / reply into a formatted message. 
-	 * <p> 
-	 * This is a generalized method to encode for request or encode reply with reference of request. 
-	 * @param refRequest
-	 * @param methodName
-	 * @param returnVal
-	 * @param param
-	 * @return
-	 */
-	public String encode(final String refRequest, final String methodName, Object returnVal, Object... param);
+	public String encode(String method, Object returnVal, Object... param);
 	/**
 	 * Decode parameter from formatted message with a given class type for parsing. 
 	 * @param message the formatted message. 

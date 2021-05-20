@@ -243,8 +243,10 @@ public class RpcSocketServer implements IRpcServer {
 						System.out.println("Client " + this.socket + " sends exit...");
 						break;
 					}
+					
 					// Decode the service name. 
 					String requestMethod = formatProcessor.getMethod(received);
+					
 					// Decode for input parameter. 
 					Object object = formatProcessor.decodeParam(received, paramClassMap.get(requestMethod));
 					
@@ -257,7 +259,7 @@ public class RpcSocketServer implements IRpcServer {
 					designatedMethod.invoke(requestContext);
 					
 					// Generate the reply with FormatProcessor. 
-					String replyString =  formatProcessor.encode(received, null, requestContext.returnVal);
+					String replyString =  formatProcessor.encode(requestMethod, requestContext.returnVal, requestContext.param);
 					// Encapsulate message according with protocol and send it. 
 					protocolProcessor.write(replyString);
 				}

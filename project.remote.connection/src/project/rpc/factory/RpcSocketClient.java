@@ -164,26 +164,27 @@ public class RpcSocketClient implements IRpcClient {
 			return null;
 		}
 		
-		String tosend, message;
+		String message;
 		/// Request generating and sending. -----
 		// Generate request message. 
 		try {
 			// Returned type with default constructor. 
 			Constructor<?> constructor = returnedClassMap.get(method).getDeclaredConstructor();
-			message = formatProcessor.encode(null, method, constructor.newInstance(), params);
+			message = formatProcessor.encode(method, constructor.newInstance(), params);
 		} catch (NoSuchMethodException | SecurityException |InstantiationException | IllegalAccessException | IllegalArgumentException
 				| InvocationTargetException | NullPointerException e) {
 			// Returned type without default constructor. 
-			message = formatProcessor.encode(null, method, null, params);
+			message = formatProcessor.encode(method, null, params);
 		}
+		
 		// Encapsulate message according with protocol and send it. 
 		protocolProcessor.write(message);
 		
 		/// Reply fetching and decoding. -----
 		// Wait for response. 
 		String received = protocolProcessor.readAndDecode();
-		
-		System.out.println("Client received:----\n" + formatProcessor.prettyOutput(received));
+
+		System.out.println("Client receive: " + received);
 		
 		// Check if received message is exit signal.
 		if(protocolProcessor.isExit(received)) {
