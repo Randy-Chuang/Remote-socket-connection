@@ -1,10 +1,13 @@
-package project.rpc.factory;
+package project.remote.server;
 
 import project.remote.common.service.ServiceClass.DateInfo;
 import project.remote.common.service.ServiceClass.SystemInfo;
 import project.remote.server.service.SystemService;
+import project.rpc.factory.IRpcClient;
+import project.rpc.factory.IRpcServer;
+import project.rpc.factory.RpcFactory;
 
-public class Main {
+public class FactoryDemo {
 	public static void main(String[] args) {
 		String hostAddrss = "127.0.0.1";
 		int portNumber = 5056;
@@ -60,5 +63,4 @@ public class Main {
 		}
 		server.stop();
 	}
-	
 }
