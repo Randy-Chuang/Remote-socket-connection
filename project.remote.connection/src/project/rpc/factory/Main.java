@@ -12,7 +12,8 @@ public class Main {
 		/// server code
 		SystemService systemService = new SystemService();
 		RpcFactory factory = RpcFactory.getInstance();
-		IRpcServer server = factory.getJsonSocketServer(portNumber);
+//		IRpcServer server = factory.getJsonSocketServer(portNumber);
+		IRpcServer server = factory.getXmlSocketServer(portNumber);
 		server.addRequestHandler("getDate", null, (ctx) -> {
 			ctx.returnVal = systemService.getDate();
 		});
@@ -25,7 +26,8 @@ public class Main {
 		server.start();
 
 		/// client code
-		IRpcClient client = factory.getJsonSocketClient(hostAddrss, portNumber);
+//		IRpcClient client = factory.getJsonSocketClient(hostAddrss, portNumber);
+		IRpcClient client = factory.getXmlSocketClient(hostAddrss, portNumber);
 		client.addReturnedClass("getDate", DateInfo.class);
 		client.addReturnedClass("getSystemInfo", SystemInfo.class);
 		client.addReturnedClass("square", Double.class);
@@ -50,4 +52,5 @@ public class Main {
 		}
 		server.stop();
 	}
+	
 }

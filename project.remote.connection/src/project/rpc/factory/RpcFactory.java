@@ -3,11 +3,10 @@ package project.rpc.factory;
 import java.io.IOException;
 
 import project.rpc.factory.format.JsonFormatProcessor;
+import project.rpc.factory.format.XmlFormatProcessor;
 
 /*
  * TODO:
- * 1. XML format.
- * 		A. Request / Reply format: XML - XMLEncoder
  * 1.2. Currently, we use lambda expression to register our system service, and the system service is invoked by object methods (not static), is it safe to do so? 
  * 1.5. Responding with invalid request (wrong name of services)
  * 2. Invoking server service with user-defined Class (or even an array) would cause an exception while casting. 
@@ -89,6 +88,19 @@ public class RpcFactory {
 			return null;
 		}
 	}
+	
+	/**
+	 * Get an instance of <b>IRpcServer</b> with socket connection and XML message format.  
+	 * @param portNumber Port number which provides the server services. 
+	 */
+	public IRpcServer getXmlSocketServer(int portNumber) {
+		try {
+			return new RpcSocketServer(portNumber).setFormatProcessor(XmlFormatProcessor.class);
+		} catch (IOException e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
 
 	/**
 	 * Get an instance of <b>IRpcClient</b> with socket connection and JSON message format.  
@@ -97,6 +109,15 @@ public class RpcFactory {
 	 */
 	public IRpcClient getJsonSocketClient(String hostAddr, int portNumber) {
 		return new RpcSocketClient(hostAddr, portNumber).setFormatProcessor(JsonFormatProcessor.class);
+	}
+	
+	/**
+	 * Get an instance of <b>IRpcClient</b> with socket connection and XML message format.  
+	 * @param hostAddr Host address of the server, it could be either IP or URL address. 
+	 * @param portNumber Corresponding port number that provides the server services. 
+	 */
+	public IRpcClient getXmlSocketClient(String hostAddr, int portNumber) {
+		return new RpcSocketClient(hostAddr, portNumber).setFormatProcessor(XmlFormatProcessor.class);
 	}
 
 }
