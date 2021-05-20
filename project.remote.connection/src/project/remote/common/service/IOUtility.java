@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.util.Arrays;
 
 public class IOUtility {
 	// Issues: method ready() doesn't guarantee the input buffer contain any new line character.
@@ -84,6 +85,8 @@ public class IOUtility {
 		int ret;
 		String received = "";
 		while(length > 0) {
+			// Buffer clear before reusing it. 
+			Arrays.fill(buffer, '\0');
 			if(length >= bufferSize) {
 				ret = reader.read(buffer, 0, bufferSize);
 			}

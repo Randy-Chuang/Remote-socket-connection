@@ -7,6 +7,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.util.Arrays;
 
 import com.google.gson.JsonObject;
 
@@ -258,6 +259,8 @@ public class DefaultProtocolProcessor extends AbstractProtocolProcessor {
 			int ret;
 			String received = "";
 			while(length > 0) {
+				// Buffer clear before reusing it. 
+				Arrays.fill(buffer, '\0');
 				if(length >= bufferSize) {
 					ret = reader.read(buffer, 0, bufferSize);
 				}
@@ -280,6 +283,7 @@ public class DefaultProtocolProcessor extends AbstractProtocolProcessor {
 			bufferedWriter.write(tosend, 0, tosend.length());
 			bufferedWriter.flush();
 		}
+		
 	}
 	
 }
