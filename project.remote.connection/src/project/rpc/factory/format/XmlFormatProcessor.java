@@ -53,17 +53,14 @@ public class XmlFormatProcessor implements IFormatProcessor {
 		XmlMessage xmlMessage = deserializeFromString(message);
 		return xmlMessage.method;
 	}
-
-	/**
-	 * Convert the formatted message into object associated with the adopted parser. 
-	 * @param message the formatted message. 
-	 * @return object associated with the adopted parser.
-	 */
-	@Override
-	public Object toObjectFormat(String message) {
-		return null;
-	}
 	
+	/**
+	 * Encode the given info into a formatted message. 
+	 * @param method
+	 * @param returnVal
+	 * @param param
+	 * @return
+	 */
 	@Override
 	public String encode(String method, Object returnVal, Object... param) {
 		XmlMessage xmlMessage = new XmlMessage();
@@ -78,8 +75,6 @@ public class XmlFormatProcessor implements IFormatProcessor {
 		
 		return serializeToString(xmlMessage);
 	}
-	
-
 
 	/**
 	 * Decode parameter from formatted message with a given class type for parsing. 

@@ -16,7 +16,7 @@ public interface IFormatProcessor {
 	 * @param message the formatted message. 
 	 * @return object associated with the adopted parser.
 	 */
-	public Object toObjectFormat(final String message);
+//	public Object toObjectFormat(final String message);
 	/**
 	 * Encode the given info into a formatted message. 
 	 * @param method

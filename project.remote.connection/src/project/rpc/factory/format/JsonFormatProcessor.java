@@ -30,6 +30,18 @@ public class JsonFormatProcessor implements IFormatProcessor {
 	private JsonParser jsonParser = new JsonParser();
 	
 	/**
+	 * Convert the formatted message into object associated with the adopted parser. 
+	 * @param message the formatted message. 
+	 * @return object associated with the adopted parser.
+	 */
+	private Object toObjectFormat(String message) {
+		if(message == null) {
+			return null;
+		}	
+		return jsonParser.parse(message).getAsJsonObject();
+	}
+	
+	/**
 	 * Decode the service (method) name from formatted message.
 	 * @param message the formatted message. 
 	 * @return service (method) name.
@@ -38,19 +50,6 @@ public class JsonFormatProcessor implements IFormatProcessor {
 	public String getMethod(final String message) {	
 		JsonObject jsonObject = (JsonObject)toObjectFormat(message);
 		return jsonObject.get(METHOD_OBJ_STRING).getAsString();
-	}
-
-	/**
-	 * Convert the formatted message into object associated with the adopted parser. 
-	 * @param message the formatted message. 
-	 * @return object associated with the adopted parser.
-	 */
-	@Override
-	public Object toObjectFormat(String message) {
-		if(message == null) {
-			return null;
-		}	
-		return jsonParser.parse(message).getAsJsonObject();
 	}
 	
 	/**
@@ -136,5 +135,5 @@ public class JsonFormatProcessor implements IFormatProcessor {
 		JsonObject jsonObject = jsonParser.parse(message).getAsJsonObject();
 		return prettyGson.toJson(jsonObject);
 	}
-		
+	
 }
