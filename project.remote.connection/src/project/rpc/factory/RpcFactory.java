@@ -7,19 +7,13 @@ import project.rpc.factory.format.XmlFormatProcessor;
 
 /*
  * TODO:
- * 0. writing doc: lost the link to external class reference (com.google.gson.JsonObject)
- * 0.5. writing user guide: mention that the system service should be thread safe (or using static method)
- * 
- * --------------------
  * 10. Supporting multiple input parameters. 
  * 11. Complete mechanism to handle / resolve any possible scenario occurred in practice. 
  * 		Mechanism: Time out, 
  * 		Scenario: unexpected disconnection (without receiving exit message), wrong format (currently, throw exception and exit)
+ * 12. Improve factory pattern for ease of use or extending for developer. 
  * 
- * - Current class hierarchy is showing below:
- * 		Factory -> RpcSocketServer/Client -> ProtocolProcessor (read, write, encode/decode NetMessage)
- * 										  -> FormatProcessor (encode/decode message with specific format e.g. JSON or XML)
- * 										  -> (Server) RequestHandler (Invoke corresponding service and return with an object)
+ * 15. Is is good to place javadoc along with your project? (most of the files are html)
  */
 
 /**

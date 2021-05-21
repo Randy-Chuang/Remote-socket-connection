@@ -23,4 +23,5 @@ public interface IRpcServer {
      * @param r the actual instance of a functional interface that are going to handle this service. 
      */
     public <T> void addRequestHandler(String service, Class<T> paramClass, Invocable <T> r);
+    // overloading
 }
