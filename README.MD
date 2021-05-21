@@ -73,11 +73,11 @@ project
     SystemService systemService = new SystemService();
     // Register server services. 
     server.addRequestHandler("getDate", null, (ctx) -> {
-		ctx.returnVal = systemService.getDate();
+	    ctx.returnVal = systemService.getDate();
 	});
 	server.addRequestHandler("square", Double.class, (ctx) -> {
         // java performs generic inference to determine the type of param from class type argument 
-		ctx.returnVal = systemService.square(ctx.param);
+	    ctx.returnVal = systemService.square(ctx.param);
 	});
     
 	server.start();
@@ -129,3 +129,16 @@ Quick test:
 ```sh
 java -jar ClientLocal.jar ServerLocal.jar
 ```
+## TODOs
+
+- [ ] Supporting multiple input parameters. 
+- [ ] Complete mechanism to handle / resolve any possible scenario occurred in practice. 
+    Mechanism: Time out, etc. 
+    Scenario: unexpected disconnection (without receiving exit message), wrong format (currently, throw exception and exit)
+- [ ] Improve factory pattern for ease of use or extending for developer. 
+- [ ] Is is good to place javadoc along with your project? (most of the files are html)
+## References 
+
+- [Microsoft LSP](https://microsoft.github.io/language-server-protocol/specifications/specification-current/)
+- [GSON](https://github.com/google/gson)
+    - [GSON 2.8.2 doc](https://javadoc.io/doc/com.google.code.gson/gson/2.8.2/index.html)
