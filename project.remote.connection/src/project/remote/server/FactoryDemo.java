@@ -19,31 +19,34 @@ public class FactoryDemo {
 		RpcFactory factory = RpcFactory.getInstance();
 		IRpcServer server;
 		try {
-//			server = factory.getJsonSocketServer(portNumber);
-			server = factory.getXmlSocketServer(portNumber);
+			// Obtain server instance
+			server = factory.getJsonSocketServer(portNumber);
+//			server = factory.getXmlSocketServer(portNumber);
 		} catch (IOException e) {
 			e.printStackTrace();
 			return;
 		}
+		// Register server services. 
 		server.addRequestHandler("getDate", null, (ctx) -> {
 			ctx.returnVal = systemService.getDate();
 		});
 		server.addRequestHandler("getSystemInfo", null, (ctx) -> {
 			ctx.returnVal = systemService.getSystemInfo();
 		});
-		server.<Double>addRequestHandler("square", Double.class, (ctx) -> {
+		server.addRequestHandler("square", Double.class, (ctx) -> {
+			// java performs generic inference to determine the type of param from class type argument 
 			ctx.returnVal = systemService.square(ctx.param);
 		});
 		server.start();
 
 		/// client code
-//		IRpcClient client = factory.getJsonSocketClient(hostAddrss, portNumber);
-		IRpcClient client = factory.getXmlSocketClient(hostAddrss, portNumber);
+		IRpcClient client = factory.getJsonSocketClient(hostAddrss, portNumber);
+//		IRpcClient client = factory.getXmlSocketClient(hostAddrss, portNumber);
 
 		System.out.println("Client starts sending request----------------------");
 
 		client.start();
-		// invoke() would return the class object associated with the service
+		// invoke() would return the class object designated by the class type argument
 		DateInfo dateInfo = (DateInfo)client.invoke("getDate", DateInfo.class);
 		if(dateInfo != null) {
 			dateInfo.printContent();
